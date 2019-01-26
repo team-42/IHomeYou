@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gameinfo>
+    <name>I Home You!</name>
+    <subtitle>Perfect flats for every customer</subtitle>
+    <description>A game, that was implemented with the LITIengine.</description>
+    <website>https://weareprophet.de</website>
+    <version>v0.1.0</version>
+    <company>weareprophet.de</company>
+    <developer>Matthias Kricke</developer>
+    <developer>Marius Schneider</developer>
+    <developer>Michael Schmeißer</developer>
+</gameinfo>

@@ -4,8 +4,8 @@ import de.gurkenlabs.litiengine.gui.screens.Screen;
 
 import java.awt.*;
 
-public class FlatLayoutScreen extends Screen {
-    protected FlatLayoutScreen() {
+public class FlatLayoutSelection extends Screen {
+    protected FlatLayoutSelection() {
         super("Layout screen");
     }
 
