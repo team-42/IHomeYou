@@ -5,18 +5,16 @@ import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
-import org.frice.anim.rotate.SimpleRotate;
-import org.frice.obj.sub.ShapeObject;
-import org.frice.resource.graphics.ColorResource;
-import org.frice.util.shape.FRectangle;
+import org.frice.obj.sub.ImageObject;
 
 import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
-    private ShapeObject player;
 
     GameGrid grid;
+    private Player player;
+    private AssetSelector assetSelector;
 
 
     public static void main(String[] args) {
@@ -26,24 +24,22 @@ public class IHomeYouGame extends Game {
 
     @Override
     public void onInit() {
-        player = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(GameGrid.SIZE - 2 * GameGrid.BORDERS, GameGrid.SIZE - 2 * GameGrid.BORDERS));
         setSize(1366, 720);
         setBounds(0, 0, 1366, 720);
         setLocation(0, 0);
+        setTitle("I Home You!");
         grid = new GameGrid(this);
+        player = new Player(this);
+        assetSelector = new AssetSelector(this);
 
-        addObject(player);
-        player.setX(GameGrid.BORDERS * 2);
-        player.setY(GameGrid.BORDERS * 2);
-        SimpleRotate rotate = new SimpleRotate(2);
-        player.addAnim(rotate);
-
-        addKeyPressedEvent(KeyCode.RIGHT.getCode(), event -> player.move(GameGrid.SIZE, 0));
-        addKeyPressedEvent(KeyCode.LEFT.getCode(), event -> player.move(-GameGrid.SIZE, 0));
-        addKeyPressedEvent(KeyCode.UP.getCode(), event -> player.move(0, -GameGrid.SIZE));
-        addKeyPressedEvent(KeyCode.DOWN.getCode(), event -> player.move(0, GameGrid.SIZE));
-
-        new AssetSelector(this);
+        addKeyReleasedEvent(KeyCode.SPACE.getCode(),
+                event -> {
+                    LOG.debug("New {} placed at row {} col {}", assetSelector.getSelected().name(), player.getRow(), player.getColumn());
+                    grid.setObject(
+                            player.getRow(),
+                            player.getColumn(),
+                            assetSelector.getSelected().getResource());
+                });
     }
 
     @Override
