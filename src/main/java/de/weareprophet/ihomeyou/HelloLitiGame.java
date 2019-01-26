@@ -6,5 +6,6 @@ public class HelloLitiGame {
     public static void main(String[] args) {
         Game.init();
         Game.start();
+        Game.screens().add(new FlatLayoutScreen());
     }
 }

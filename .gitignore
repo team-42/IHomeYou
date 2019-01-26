@@ -1,7 +1,6 @@
 .gradle
 /build/
 /.idea/
-/gradle/
 /system/
 /out/
 /logs/
