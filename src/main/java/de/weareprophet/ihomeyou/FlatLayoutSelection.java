@@ -15,6 +15,7 @@ public class FlatLayoutSelection extends Screen {
 
         g.setColor(Color.RED);
         g.setBackground(Color.BLUE);
+        g.setPaint(Color.BLUE);
         g.draw3DRect(20, 20, 200, 200, false);
     }
 }
