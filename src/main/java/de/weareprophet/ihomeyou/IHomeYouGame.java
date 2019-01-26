@@ -1,7 +1,9 @@
 package de.weareprophet.ihomeyou;
 
+import javafx.scene.input.KeyCode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.frice.Game;
-import org.frice.anim.move.AccelerateMove;
 import org.frice.anim.rotate.SimpleRotate;
 import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
@@ -10,6 +12,10 @@ import org.frice.util.shape.FRectangle;
 import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
+    private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
+    private ShapeObject player;
+
+
     public static void main(String[] args) {
         launch(IHomeYouGame.class);
     }
@@ -17,14 +23,27 @@ public class IHomeYouGame extends Game {
 
     @Override
     public void onInit() {
+        player = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(GameGrid.SIZE - 2 * GameGrid.BORDERS, GameGrid.SIZE - 2 * GameGrid.BORDERS));
         setSize(1366, 720);
+        setBounds(0, 0, 1366, 720);
         setLocation(0, 0);
+        new GameGrid(this);
 
-        ShapeObject obj1 = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(50, 50));
-        addObject(obj1);
-        obj1.setX(100);
-        obj1.setY(100);
-        obj1.addAnim(new SimpleRotate(2));
+        addObject(player);
+        player.setX(GameGrid.BORDERS * 2);
+        player.setY(GameGrid.BORDERS * 2);
+        SimpleRotate rotate = new SimpleRotate(2);
+        player.addAnim(rotate);
+
+        addKeyPressedEvent(KeyCode.RIGHT.getCode(), event -> player.move(GameGrid.SIZE, 0));
+        addKeyPressedEvent(KeyCode.LEFT.getCode(), event -> player.move(-GameGrid.SIZE, 0));
+        addKeyPressedEvent(KeyCode.UP.getCode(), event -> player.move(0, -GameGrid.SIZE));
+        addKeyPressedEvent(KeyCode.DOWN.getCode(), event -> player.move(0, GameGrid.SIZE));
+    }
+
+    @Override
+    public void onRefresh() {
+        super.onRefresh();
     }
 
     @Override
