@@ -15,7 +15,7 @@ class GameGrid {
     static final int SIZE = 64;
     static final int BORDERS = 10;
 
-    static final int COLS = 20;
+    static final int COLS = 16;
     static final int ROWS = 10;
 
     GameGrid(IHomeYouGame iHomeYouGame) {

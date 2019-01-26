@@ -1,5 +1,6 @@
 package de.weareprophet.ihomeyou;
 
+import de.weareprophet.ihomeyou.asset.AssetSelector;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,8 @@ public class IHomeYouGame extends Game {
         addKeyPressedEvent(KeyCode.LEFT.getCode(), event -> player.move(-GameGrid.SIZE, 0));
         addKeyPressedEvent(KeyCode.UP.getCode(), event -> player.move(0, -GameGrid.SIZE));
         addKeyPressedEvent(KeyCode.DOWN.getCode(), event -> player.move(0, GameGrid.SIZE));
+
+        new AssetSelector(this);
     }
 
     @Override
