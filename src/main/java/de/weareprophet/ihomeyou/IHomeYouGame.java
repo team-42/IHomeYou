@@ -1,6 +1,8 @@
 package de.weareprophet.ihomeyou;
 
 import org.frice.Game;
+import org.frice.anim.move.AccelerateMove;
+import org.frice.anim.rotate.SimpleRotate;
 import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.util.shape.FRectangle;
@@ -20,6 +22,9 @@ public class IHomeYouGame extends Game {
 
         ShapeObject obj1 = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(50, 50));
         addObject(obj1);
+        obj1.setX(100);
+        obj1.setY(100);
+        obj1.addAnim(new SimpleRotate(2));
     }
 
     @Override
