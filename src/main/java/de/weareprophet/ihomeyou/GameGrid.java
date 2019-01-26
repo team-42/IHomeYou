@@ -49,11 +49,15 @@ public class GameGrid {
         // add edges
         for(int c = 0; c <= COLS+1; c++) {
             for (int r = 0; r <= ROWS+1; r++) {
-                graph.addVertex(Pair.of(c, r));
+                if(c < COLS) {
+                    graph.addEdge(Pair.of(c, r), Pair.of(c+1, r));
+                }
+                if(r < ROWS) {
+                    graph.addEdge(Pair.of(c, r), Pair.of(c, r+1));
+                }
             }
         }
-
-        return null;
+        return graph;
     }
 
     public boolean setObject(int row, int column, ImageResource res) {
@@ -66,7 +70,35 @@ public class GameGrid {
         return false;
     }
 
-    public boolean setWall(int row, int column, WallDirection dir) {
+    public boolean setWall(int row, int column, ImageResource res, WallDirection dir) {
+
+        ImageObject obj = null;
+        switch (dir) {
+            case TOP:
+                obj = new ImageObject(res, SIZE * column, SIZE * row);
+
+                graph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
+                break;
+            case BOTTOM:
+                obj = new ImageObject(res, 64 + SIZE * column, SIZE * row);
+
+                graph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
+                break;
+            case LEFT:
+                obj = new ImageObject(res, SIZE * column, SIZE * row);
+                obj.rotate(90);
+
+                graph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
+                break;
+            case RIGHT:
+                obj = new ImageObject(res, SIZE * column, SIZE * row + 64);
+                obj.rotate(90);
+
+                graph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
+                break;
+
+        }
+        ihyg.addObject(obj);
         return false;
     }
 
