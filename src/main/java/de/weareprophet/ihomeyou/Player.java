@@ -14,14 +14,10 @@ import java.util.concurrent.TimeUnit;
 class Player {
 
     private final ShapeObject shape;
-
     private final SimpleText budgetDisplay;
     private final ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
-
     private int row = 0;
-
     private int column = 0;
-
     private int budget = 1000;
 
     Player(IHomeYouGame game) {

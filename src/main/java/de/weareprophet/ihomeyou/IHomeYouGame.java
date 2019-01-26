@@ -2,10 +2,12 @@ package de.weareprophet.ihomeyou;
 
 import de.weareprophet.ihomeyou.asset.AssetSelector;
 import de.weareprophet.ihomeyou.asset.AssetType;
+import de.weareprophet.ihomeyou.asset.WallType;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
+import org.frice.resource.image.ImageResource;
 
 import static org.frice.Initializer.launch;
 
@@ -43,6 +45,23 @@ public class IHomeYouGame extends Game {
                                 selectedAsset.getResource());
                     }
                 });
+
+        addKeyReleasedEvent(KeyCode.W.getCode(), event -> {
+            placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP);
+        });
+        addKeyReleasedEvent(KeyCode.A.getCode(), event -> {
+            placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT);
+        });
+        addKeyReleasedEvent(KeyCode.S.getCode(), event -> {
+            placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM);
+        });
+        addKeyReleasedEvent(KeyCode.D.getCode(), event -> {
+            placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.RIGHT);
+        });
+    }
+
+    private void placeWall(ImageResource wallType, GameGrid.WallDirection wallDirection) {
+        grid.setWall(player.getRow(), player.getColumn(), wallType, wallDirection);
     }
 
     @Override

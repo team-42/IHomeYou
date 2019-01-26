@@ -33,15 +33,23 @@ public class AssetSelector {
         game.addObject(new SimpleText("Price: € ", game.getXOfRightColumn(), Y_OFFSET + 200));
         price = new SimpleText(String.valueOf(getSelected().getPrice()), game.getXOfRightColumn() + 80, Y_OFFSET + 200);
         game.addObject(price);
-        game.addKeyPressedEvent(KeyCode.CONTROL.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyCode.Q.getCode(), keyEvent -> {
+            selected = (selected - 1 + assets.size()) % assets.size();
+            updateSelectedInfo();
+        });
+        game.addKeyPressedEvent(KeyCode.E.getCode(), keyEvent -> {
             selected = (selected + 1) % assets.size();
-            imgObj.setRes(getSelected().getLargeResource());
-            selectedName.setText(getSelected().getName());
-            selectedDesc.setText(getSelected().getDescription());
-            price.setText(String.valueOf(getSelected().getPrice()));
-            LOG.debug("Selected asset changed to: {}", selected);
+            updateSelectedInfo();
         });
         game.addObject(new SimpleText(ColorResource.BLACK, "Selected object:", game.getXOfRightColumn(), Y_OFFSET));
+    }
+
+    private void updateSelectedInfo() {
+        imgObj.setRes(getSelected().getLargeResource());
+        selectedName.setText(getSelected().getName());
+        selectedDesc.setText(getSelected().getDescription());
+        price.setText(String.valueOf(getSelected().getPrice()));
+        LOG.debug("Selected asset changed to: {}", selected);
     }
 
     public AssetType getSelected() {
