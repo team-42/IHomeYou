@@ -84,37 +84,32 @@ public class GameGrid {
         ImageObject obj = null;
         switch (dir) {
             case TOP:
-                obj = new ImageObject(res, SIZE * column, SIZE * row);
-
+                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
                 graph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
                 break;
             case BOTTOM:
-                obj = new ImageObject(res, 64 + SIZE * column, SIZE * row);
-
+                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
                 graph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
                 break;
             case LEFT:
-                obj = new ImageObject(res, SIZE * column, SIZE * row);
-                obj.rotate(90);
-
+                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
                 graph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
                 break;
             case RIGHT:
-                obj = new ImageObject(res, SIZE * column, SIZE * row + 64);
-                obj.rotate(90);
-
+                obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
                 graph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
                 break;
-
         }
         ihyg.addObject(obj);
         return false;
     }
 
-
-
     public enum WallDirection {
         TOP, BOTTOM, LEFT, RIGHT
+    }
+
+    public void calculateRooms() {
+
     }
 
     public void printWallGraph() {
@@ -130,6 +125,5 @@ public class GameGrid {
             e.printStackTrace();
         }
         System.out.println(writer.toString());
-
     }
 }
