@@ -1,11 +1,11 @@
 package de.weareprophet.ihomeyou;
 
 import de.weareprophet.ihomeyou.asset.AssetSelector;
+import de.weareprophet.ihomeyou.asset.AssetType;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
-import org.frice.obj.sub.ImageObject;
 
 import static org.frice.Initializer.launch;
 
@@ -34,11 +34,14 @@ public class IHomeYouGame extends Game {
 
         addKeyReleasedEvent(KeyCode.SPACE.getCode(),
                 event -> {
-                    LOG.debug("New {} placed at row {} col {}", assetSelector.getSelected().name(), player.getRow(), player.getColumn());
-                    grid.setObject(
-                            player.getRow(),
-                            player.getColumn(),
-                            assetSelector.getSelected().getResource());
+                    final AssetType selectedAsset = assetSelector.getSelected();
+                    LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
+                    if (player.pay(selectedAsset.getPrice())) {
+                        grid.setObject(
+                                player.getRow(),
+                                player.getColumn(),
+                                selectedAsset.getResource());
+                    }
                 });
     }
 
@@ -52,5 +55,9 @@ public class IHomeYouGame extends Game {
     @Override
     public void onExit() {
         System.exit(0);
+    }
+
+    public int getXOfRightColumn() {
+        return GameGrid.COLS * GameGrid.SIZE + 2 * GameGrid.BORDERS;
     }
 }
