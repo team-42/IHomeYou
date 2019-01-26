@@ -58,7 +58,7 @@ public class GameGrid {
 
     public boolean setObject(int row, int column, ImageResource res) {
         if(!gameGrid.contains(row, column)) {
-            ImageObject obj = new ImageObject(res, 64 * column + 32, 64 * row + 32);
+            ImageObject obj = new ImageObject(res, SIZE * column + 8, SIZE * row + 8);
             gameGrid.put(row, column, obj);
             ihyg.addObject(obj);
             return true;
