@@ -15,6 +15,8 @@ public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
     private ShapeObject player;
 
+    GameGrid grid;
+
 
     public static void main(String[] args) {
         launch(IHomeYouGame.class);
@@ -27,7 +29,7 @@ public class IHomeYouGame extends Game {
         setSize(1366, 720);
         setBounds(0, 0, 1366, 720);
         setLocation(0, 0);
-        new GameGrid(this);
+        grid = new GameGrid(this);
 
         addObject(player);
         player.setX(GameGrid.BORDERS * 2);
@@ -44,6 +46,8 @@ public class IHomeYouGame extends Game {
     @Override
     public void onRefresh() {
         super.onRefresh();
+
+
     }
 
     @Override
