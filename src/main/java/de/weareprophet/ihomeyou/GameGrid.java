@@ -11,6 +11,13 @@ import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.io.ComponentNameProvider;
+import org.jgrapht.io.DOTExporter;
+import org.jgrapht.io.ExportException;
+import org.jgrapht.io.GraphExporter;
+
+import java.io.StringWriter;
+import java.io.Writer;
 
 
 public class GameGrid {
@@ -34,6 +41,7 @@ public class GameGrid {
         ihyg.addObject(gameGrid);
 
         graph = initNoWallGraph();
+//        printWallGraph();
     }
 
     private Graph<Pair<Integer, Integer>, DefaultEdge> initNoWallGraph() {
@@ -49,10 +57,11 @@ public class GameGrid {
         // add edges
         for(int c = 0; c <= COLS+1; c++) {
             for (int r = 0; r <= ROWS+1; r++) {
-                if(c < COLS) {
+                if(c+1 <= COLS+1) {
                     graph.addEdge(Pair.of(c, r), Pair.of(c+1, r));
                 }
-                if(r < ROWS) {
+
+                if(r+1 <= ROWS+1) {
                     graph.addEdge(Pair.of(c, r), Pair.of(c, r+1));
                 }
             }
@@ -62,7 +71,7 @@ public class GameGrid {
 
     public boolean setObject(int row, int column, ImageResource res) {
         if(!gameGrid.contains(row, column)) {
-            ImageObject obj = new ImageObject(res, SIZE * column + 8, SIZE * row + 8);
+            ImageObject obj = new ImageObject(res, SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
             gameGrid.put(row, column, obj);
             ihyg.addObject(obj);
             return true;
@@ -103,7 +112,24 @@ public class GameGrid {
     }
 
 
+
     public enum WallDirection {
         TOP, BOTTOM, LEFT, RIGHT
+    }
+
+    public void printWallGraph() {
+        ComponentNameProvider<Pair<Integer, Integer>> vertexIdProvider = ele -> "V_" + ele.getFirst() + "_" + ele.getSecond();
+        ComponentNameProvider<Pair<Integer, Integer>> vertexLabelProvider = ele -> "(" + ele.getFirst() + "," + ele.getSecond() + ")";
+
+        GraphExporter<Pair<Integer, Integer>, DefaultEdge> exporter =
+                new DOTExporter<>(vertexIdProvider, vertexLabelProvider, null);
+        Writer writer = new StringWriter();
+        try {
+            exporter.exportGraph(graph, writer);
+        } catch (ExportException e) {
+            e.printStackTrace();
+        }
+        System.out.println(writer.toString());
+
     }
 }
