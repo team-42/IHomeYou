@@ -7,10 +7,6 @@ import java.util.*;
 public class Room {
     private Set<Tile> roomTiles = new HashSet<>();
 
-    public void addTile(Tile tile) {
-        roomTiles.add(tile);
-    }
-
     public void addAllTiles(Collection<Tile> tiles) {
         roomTiles.addAll(tiles);
     }

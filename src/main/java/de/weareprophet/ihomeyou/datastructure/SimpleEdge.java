@@ -1,6 +1,5 @@
 package de.weareprophet.ihomeyou.datastructure;
 
-import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultEdge;
 
 public class SimpleEdge extends DefaultEdge {

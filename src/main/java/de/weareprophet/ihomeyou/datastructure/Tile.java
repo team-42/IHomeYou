@@ -9,7 +9,7 @@ public class Tile extends Pair<Integer, Integer> {
      * @param column  the first element
      * @param row the second element
      */
-    public Tile(Integer column, Integer row) {
+    private Tile(Integer column, Integer row) {
         super(column, row);
     }
 

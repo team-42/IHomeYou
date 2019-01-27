@@ -7,7 +7,7 @@ public class FurnitureObject {
     private AssetType type;
     private ImageObject obj;
 
-    public FurnitureObject(AssetType type, ImageObject obj) {
+    private FurnitureObject(AssetType type, ImageObject obj) {
         this.type = type;
         this.obj = obj;
     }
