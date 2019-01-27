@@ -293,7 +293,7 @@ public class IHomeYouGame extends Game {
 
     private void placeWall(WallType wallType, GameGrid.WallDirection wallDirection) {
         if (gameState == GameState.InLevel && player.canPay(wallType.getPrice())
-                && grid.setWall(player.getRow(), player.getColumn(), wallType.getResource(wallDirection), wallDirection)) {
+                && grid.setWall(player.getRow(), player.getColumn(), wallType, wallDirection)) {
             player.pay(wallType.getPrice());
         } else {
             player.signalMistake(ES);
