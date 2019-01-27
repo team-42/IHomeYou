@@ -47,7 +47,9 @@ public enum AssetType {
     Couch("Couch", "Every flat should have one.", "couch", 250, 1,
             NeedsFulfillment.builder().add(Rest, 150).add(Comfort, 100).build()),
     Fishbowl("Fishbowl", "Provides company.", "fishbowl", 50, 1,
-            NeedsFulfillment.builder().add(Decoration, 20).add(Personal, 30).build());
+            NeedsFulfillment.builder().add(Decoration, 20).add(Personal, 30).build()),
+    Oven("Oven", "Can heat things up.", "oven", 140, 0,
+            NeedsFulfillment.builder().add(Food, 80).add(Comfort, 30).add(Personal, 30).build());
 
     private final String name;
     private final String description;

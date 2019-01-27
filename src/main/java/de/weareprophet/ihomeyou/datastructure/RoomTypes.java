@@ -9,17 +9,17 @@ import java.util.Set;
 import static de.weareprophet.ihomeyou.asset.AssetType.*;
 
 public enum RoomTypes {
-    KITCHEN (DinnerTable, Kitchen, Fishbowl, Shelf, KitchenTable),
-    BATH (Bathtub, Toilet, Shelf),
-    LIVING_ROOM (Shelf, Music, DinnerTable, BookShelf, Curtains, Couch, Tv, PrayerCarpet, Fishbowl, Picture, Cabinet ),
-    BED_ROOM (Shelf, Wardrobe, Curtains, PrayerCarpet, BookShelf, Picture, Bed, Bedside, Cabinet),
-    HALLWAY (Shelf, Bench, BookShelf, Picture, Cabinet),
-    OUTDOOR (Bench),
-    OFFICE (Shelf, Desk, Curtains, BookShelf, Picture, Cabinet);
+    KITCHEN(DinnerTable, Kitchen, Fishbowl, Shelf, KitchenTable, Oven),
+    BATH(Bathtub, Toilet, Shelf),
+    LIVING_ROOM(Shelf, Music, DinnerTable, BookShelf, Curtains, Couch, Tv, PrayerCarpet, Fishbowl, Picture, Cabinet),
+    BED_ROOM(Shelf, Wardrobe, Curtains, PrayerCarpet, BookShelf, Picture, Bed, Bedside, Cabinet),
+    HALLWAY(Shelf, Bench, BookShelf, Picture, Cabinet),
+    OUTDOOR(Bench),
+    OFFICE(Shelf, Desk, Curtains, BookShelf, Picture, Cabinet);
 
     Set<AssetType> validAssetTypes;
 
-    RoomTypes (AssetType... validAssetTypes) {
+    RoomTypes(AssetType... validAssetTypes) {
         this.validAssetTypes = new HashSet<>();
         this.validAssetTypes.addAll(Arrays.asList(validAssetTypes));
     }

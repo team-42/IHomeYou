@@ -6,6 +6,8 @@ import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import de.weareprophet.ihomeyou.customer.NeedsType;
+import de.weareprophet.ihomeyou.datastructure.Room;
+import de.weareprophet.ihomeyou.datastructure.RoomTypes;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,9 +17,7 @@ import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
 
 import java.text.NumberFormat;
-import java.util.EnumMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static org.frice.Initializer.launch;
 
@@ -76,6 +76,7 @@ public class IHomeYouGame extends Game {
                     for (final AssetType asset : grid.getAssetsInGrid()) {
                         fulfilment.add(asset.getNeedsFulfillment());
                     }
+                    fulfilment.add(NeedsType.Space, calculateSpaceFulfilment());
                     double satisfaction = customer.measureSatisfaction(fulfilment.build());
                     LOG.info("Customer satisfaction: {}", satisfaction);
                     satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
@@ -106,6 +107,52 @@ public class IHomeYouGame extends Game {
         });
 
         renderCustomerInfo();
+    }
+
+    private int calculateSpaceFulfilment() {
+        int spaceValue = 0;
+        List<Room> rooms = grid.calculateRooms();
+        for (final Room r : rooms) {
+            Collection<AssetType> assetsInRoom = grid.getAssetsInRoom(r);
+            int roomSize = r.getTiles().size();
+            int assetCount = assetsInRoom.size();
+            LOG.debug("Room with {} tiles and {} assets", roomSize, assetCount);
+            spaceValue += (roomSize - assetCount) * 5;
+
+            final Map<RoomTypes, Integer> typeCount = new EnumMap<>(RoomTypes.class);
+            RoomTypes bestType = RoomTypes.HALLWAY;
+            int bestCount = 0;
+            for (final RoomTypes roomType : RoomTypes.values()) {
+                int validAssetCount = 0;
+                for (final AssetType asset : assetsInRoom) {
+                    if (roomType.validRoomAsset(asset)) {
+                        validAssetCount++;
+                    }
+                }
+                typeCount.put(roomType, validAssetCount);
+                if (validAssetCount > bestCount) {
+                    bestType = roomType;
+                    bestCount = validAssetCount;
+                }
+            }
+
+            if (bestCount >= 3) {
+                boolean roomConsistency = true;
+                for (final RoomTypes roomType : RoomTypes.values()) {
+                    if (roomType == bestType) {
+                        continue;
+                    }
+                    if (typeCount.get(roomType) > bestCount - 3) {
+                        roomConsistency = false;
+                    }
+                }
+                LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
+                if (roomConsistency) {
+                    spaceValue += 30;
+                }
+            }
+        }
+        return spaceValue;
     }
 
     private void initNeedLabels() {
