@@ -94,13 +94,13 @@ public class IHomeYouGame extends Game {
         });
         addKeyReleasedEvent(KeyCode.ENTER.getCode(), getEvaluationListener());
 
-        nextCustomer();
+        nextCustomer(1.0);
+        renderCustomerInfo();
     }
 
-    private void nextCustomer() {
+    private void nextCustomer(final double satisfactionLevel) {
         currentCustomer = Customer.rngCustomer(difficulty);
         player.addBudget(currentCustomer.getBudget());
-        renderCustomerInfo();
     }
 
     @NotNull
@@ -130,15 +130,17 @@ public class IHomeYouGame extends Game {
                     color = ColorResource.GREEN;
                 }
                 satisfactionOutput.setColor(color);
+                difficulty = (int) Math.round((float) difficulty * 1.2);
+                nextCustomer(satisfaction);
                 withinLevel = false;
             } else {
                 satisfactionOutput.setColor(ColorResource.LIGHT_GRAY);
                 satisfactionOutput.setText("Press Enter to evaluate");
                 removeObject(prestigeOutput);
                 removeObject(nextLevelOutput);
-                difficulty = (int) Math.round((float) difficulty * 1.2);
-                nextCustomer();
+                grid.resetGameGrid();
                 withinLevel = true;
+                renderCustomerInfo();
             }
 
         };
