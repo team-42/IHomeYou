@@ -27,6 +27,14 @@ import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
+    private static final int MAX_DIFFICULTY = 400;
+
+    private enum GameState {
+        InLevel,
+        BetweenLevels,
+        GameOver,
+        Victory;
+    }
 
     GameGrid grid;
     private Player player;
@@ -38,7 +46,7 @@ public class IHomeYouGame extends Game {
     private SimpleText satisfactionOutput;
     private SimpleText nextLevelOutput;
     private SimpleText prestigeOutput;
-    private boolean withinLevel = true;
+    private GameState gameState;
 
 
     public static void main(String[] args) {
@@ -55,6 +63,7 @@ public class IHomeYouGame extends Game {
         grid = new GameGrid(this);
         player = new Player(this);
         difficulty = 40;
+        gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
         addObject(new SimpleText("Current customer information", getXOfRightColumn(), 80));
@@ -100,13 +109,13 @@ public class IHomeYouGame extends Game {
 
     private void nextCustomer(final double satisfactionLevel) {
         currentCustomer = Customer.rngCustomer(difficulty);
-        player.addBudget(currentCustomer.getBudget());
+        player.addBudget((int) Math.round(currentCustomer.getBudget() * satisfactionLevel));
     }
 
     @NotNull
     private Consumer<KeyEvent> getEvaluationListener() {
         return event -> {
-            if (withinLevel) {
+            if (gameState == GameState.InLevel) {
                 final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
                 for (final FurnitureObject asset : grid.getAssetsInGrid()) {
                     fulfilment.add(asset.getType().getNeedsFulfillment());
@@ -115,13 +124,22 @@ public class IHomeYouGame extends Game {
                 double satisfaction = currentCustomer.measureSatisfaction(fulfilment.build());
                 LOG.info("Customer satisfaction: {}", satisfaction);
                 satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
-                prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
-                addObject(prestigeOutput);
-                player.addSkillPoints(currentCustomer.getPrestige());
                 addObject(nextLevelOutput);
                 final ColorResource color;
+                if(difficulty == MAX_DIFFICULTY){
+                    gameState =GameState.Victory;
+                    nextLevelOutput.setColor(ColorResource.GREEN);
+                    player.kill();
+                    Arrays.stream(getKeyListeners()).forEach(this::removeKeyListener);
+                    nextLevelOutput.setText("You have won the game!");
+                }
                 if (satisfaction < 0.2) {
                     color = ColorResource.RED;
+                    gameState = GameState.GameOver;
+                    nextLevelOutput.setColor(ColorResource.RED);
+                    player.kill();
+                    Arrays.stream(getKeyListeners()).forEach(this::removeKeyListener);
+                    nextLevelOutput.setText("GAME OVER!");
                 } else if (satisfaction < 0.5) {
                     color = ColorResource.ORANGE;
                 } else if (satisfaction < 0.8) {
@@ -130,16 +148,21 @@ public class IHomeYouGame extends Game {
                     color = ColorResource.GREEN;
                 }
                 satisfactionOutput.setColor(color);
-                difficulty = (int) Math.round((float) difficulty * 1.2);
-                nextCustomer(satisfaction);
-                withinLevel = false;
-            } else {
+                if (gameState != GameState.GameOver) {
+                    prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
+                    addObject(prestigeOutput);
+                    player.addSkillPoints(currentCustomer.getPrestige());
+                    difficulty = Math.min(MAX_DIFFICULTY, (int) Math.round((float) difficulty * 1.2));
+                    nextCustomer(satisfaction);
+                    gameState = GameState.BetweenLevels;
+                }
+            } else if (gameState == GameState.BetweenLevels) {
                 satisfactionOutput.setColor(ColorResource.LIGHT_GRAY);
                 satisfactionOutput.setText("Press Enter to evaluate");
                 removeObject(prestigeOutput);
                 removeObject(nextLevelOutput);
                 grid.resetGameGrid();
-                withinLevel = true;
+                gameState = GameState.InLevel;
                 renderCustomerInfo();
             }
 

@@ -110,4 +110,8 @@ class Player {
         budget += amount;
         budgetDisplay.setText(String.valueOf(budget));
     }
+
+    void kill() {
+        shape.setDied(true);
+    }
 }

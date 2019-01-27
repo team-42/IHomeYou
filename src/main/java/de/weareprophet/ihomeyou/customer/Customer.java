@@ -38,50 +38,50 @@ public class Customer {
         final NeedsFulfillment.Builder needs = NeedsFulfillment.builder();
         final Random r = new Random();
         int overallNeeds = 0;
-        final int numPpl = 1 + (maxDifficulty >= 100 ? r.nextInt(maxDifficulty / 100) : 0);
+        final int numPpl = Math.min(8, 1 + (maxDifficulty >= 100 ? r.nextInt(maxDifficulty / 100) : 0));
 
-        int intensity = r.nextInt(maxDifficulty * numPpl);
+        int intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Space, intensity);
 
-        intensity = r.nextInt(maxDifficulty * numPpl);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Food, intensity);
 
-        intensity = r.nextInt(maxDifficulty * numPpl);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Rest, intensity);
 
-        intensity = r.nextInt(maxDifficulty * numPpl);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Storage, intensity);
 
-        if (maxDifficulty > 50) {
-            intensity = r.nextInt(maxDifficulty * numPpl);
+        if (maxDifficulty > 60) {
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Work, intensity);
 
-            intensity = r.nextInt(maxDifficulty * numPpl);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Comfort, intensity);
 
-            intensity = r.nextInt(maxDifficulty * numPpl);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Personal, intensity);
         }
 
-        if (maxDifficulty > 100) {
-            intensity = r.nextInt(maxDifficulty * numPpl);
+        if (maxDifficulty > 80) {
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Decoration, intensity);
 
-            intensity = r.nextInt(maxDifficulty * numPpl);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Cleanliness, intensity);
         }
 
-        if (maxDifficulty > 150) {
-            intensity = r.nextInt(maxDifficulty * numPpl);
+        if (maxDifficulty > 120) {
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Luxury, intensity);
         }
