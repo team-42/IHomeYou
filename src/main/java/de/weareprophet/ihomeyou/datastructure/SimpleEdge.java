@@ -13,7 +13,7 @@ public class SimpleEdge extends DefaultEdge {
     }
 
     @Override
-    public Pair<Integer, Integer> getTarget() {
+    public Tile getTarget() {
         return (Tile) super.getTarget();
     }
 }

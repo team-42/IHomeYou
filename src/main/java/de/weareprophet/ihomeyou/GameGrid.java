@@ -40,6 +40,7 @@ public class GameGrid {
 
     GameGrid(IHomeYouGame iHomeYouGame) {
         ihyg = iHomeYouGame;
+        gameGridGroundTile = HashBasedTable.create();
         init();
     }
 
@@ -53,7 +54,6 @@ public class GameGrid {
 
     public void init() {
         gameGrid = HashBasedTable.create();
-        gameGridGroundTile = HashBasedTable.create();
         walls = new ArrayList<>();
         rooms = new ArrayList<>();
         graph = null;
@@ -63,7 +63,6 @@ public class GameGrid {
     }
 
     private void initGameGridGroundTiles() {
-        gameGridGroundTile = HashBasedTable.create();
         for(int c = 0; c < COLS; c++) {
             for(int r = 0; r < ROWS; r++) {
                 setGroundTile(FloorType.GRASS, c, r);
@@ -72,7 +71,6 @@ public class GameGrid {
     }
 
     private void setGroundTile(FloorType floorType, int column, int row) {
-
         if(gameGridGroundTile.contains(row, column)) {
             gameGridGroundTile.get(row, column).setRes(floorType.getResource());
         } else {
@@ -168,16 +166,26 @@ public class GameGrid {
         Set<List<SimpleEdge>> cycles = CycleDetection.calculate(graph);
 
         List<Room> roomList = new ArrayList<>();
-        // simple approx
+        // simple approx, is accurate for rectangular rooms
         for(List<SimpleEdge> cycle : cycles) {
             int maxTop = ROWS;
             int maxLeft = COLS;
             int maxRight = 0;
             int maxBottom = 0;
             for(SimpleEdge se : cycle) {
-//                se.getSource().getColumn() < maxTop ? maxTop = se.getSource().getColumn();
-//                if(se.getSource().getColumn() > )
+                if(se.getSource().getRow() < maxTop ) maxTop = se.getSource().getRow();
+                if(se.getSource().getColumn() < maxLeft) maxLeft = se.getSource().getColumn();
+                if(se.getTarget().getRow() > maxBottom) maxBottom = se.getTarget().getRow();
+                if(se.getTarget().getColumn() > maxRight) maxRight = se.getTarget().getColumn();
             }
+
+            Room room = new Room();
+            for(int r = maxTop; r < maxBottom; r++) {
+                for(int c = maxLeft; c < maxRight; c++) {
+                    room.addTile(Tile.of(c, r));
+                }
+            }
+            roomList.add(room);
         }
 
 
