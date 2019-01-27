@@ -65,9 +65,7 @@ public class RoomManager {
     public void executeTileChange(Table<Integer, Integer, FurnitureObject> gameGrid, GroundTileHandler gth) {
         for(Room r : rooms) {
             List<FurnitureObject> furnitureObjects = r.getRoomInventory(gameGrid);
-            System.out.println("Funniture Objects: " + furnitureObjects.size());
             if(furnitureObjects.size() > 0) {
-                System.out.println("Furniture in Room: " + furnitureObjects.size());
                 Map<RoomTypes, Integer> roomTypePerFurnitureCountMap = new HashMap<>();
                 for (FurnitureObject fo : furnitureObjects) {
                     for (RoomTypes type : RoomTypes.values()) {
@@ -84,8 +82,6 @@ public class RoomManager {
                     if (maxEntry == null || entry.getValue() > maxEntry.getValue())
                         maxEntry = entry;
                 }
-
-                System.out.println("Max Entry: " + maxEntry.getKey().name() + "|" + maxEntry.getValue());
 
                 if (maxEntry.getValue() >= furnitureObjects.size() / 2) {
                     if (maxEntry.getKey().equals(RoomTypes.BATH) || maxEntry.getKey().equals(RoomTypes.KITCHEN)) {
