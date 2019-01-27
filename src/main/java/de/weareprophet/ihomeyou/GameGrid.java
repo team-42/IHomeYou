@@ -4,14 +4,15 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.algorithm.CycleDetection;
 import de.weareprophet.ihomeyou.asset.AssetType;
+import de.weareprophet.ihomeyou.datastructure.Room;
 import de.weareprophet.ihomeyou.datastructure.SimpleEdge;
+import de.weareprophet.ihomeyou.datastructure.Tile;
 import org.frice.obj.sub.ImageObject;
 import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
 import org.frice.util.shape.FRectangle;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.io.ComponentNameProvider;
 import org.jgrapht.io.DOTExporter;
@@ -26,7 +27,7 @@ import java.util.*;
 public class GameGrid {
     private Table<Integer, Integer, AssetType> gameGrid;
     private IHomeYouGame ihyg;
-    private Graph<Pair<Integer, Integer>, SimpleEdge> graph;
+    private Graph<Tile, SimpleEdge> graph;
 
     static final int SIZE = 64;
     static final int BORDERS = 10;
@@ -51,13 +52,17 @@ public class GameGrid {
         return gameGrid.values();
     }
 
-    private Graph<Pair<Integer, Integer>, SimpleEdge> initNoWallGraph() {
-        Graph<Pair<Integer, Integer>, SimpleEdge> graph = new SimpleGraph<>(SimpleEdge.class);
+    public Collection<AssetType> getAssetsInRoom(Room room) {
+        return room.getRoomInventory(gameGrid);
+    }
+
+    private Graph<Tile, SimpleEdge> initNoWallGraph() {
+        Graph<Tile, SimpleEdge> graph = new SimpleGraph<>(SimpleEdge.class);
 
         // add vertices
         for(int c = 0; c <= COLS+1; c++) {
             for (int r = 0; r <= ROWS+1; r++) {
-                graph.addVertex(Pair.of(c, r));
+                graph.addVertex(Tile.of(c, r));
             }
         }
 //
@@ -93,26 +98,26 @@ public class GameGrid {
             case TOP:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                graph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
-                graph.addEdge(Pair.of(column, row), Pair.of(column+1,row));
+                graph.addEdge(Tile.of(column, row), Tile.of(column+1,row));
                 break;
             case BOTTOM:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
 //                graph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
-                graph.addEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
+                graph.addEdge(Tile.of(column, row+1), Tile.of(column+1,row+1));
                 break;
             case LEFT:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                graph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
-                graph.addEdge(Pair.of(column, row), Pair.of(column,row+1));
+                graph.addEdge(Tile.of(column, row), Tile.of(column,row+1));
                 break;
             case RIGHT:
                 obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                graph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
-                graph.addEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
+                graph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
                 break;
         }
         ihyg.addObject(obj);
-        List<Set<Pair<Integer, Integer>>> sets = calculateRooms();
+        List<Room> sets = calculateRooms();
         System.out.println("Room Count: " + sets.size());
 //        printWallGraph();
     }
@@ -121,14 +126,14 @@ public class GameGrid {
         TOP, BOTTOM, LEFT, RIGHT
     }
 
-    public List<Set<Pair<Integer, Integer>>> calculateRooms() {
+    public List<Room> calculateRooms() {
         Set<List<SimpleEdge>> cycles = CycleDetection.calculate(graph);
 
-        List<Set<Pair<Integer, Integer>>> roomList = new ArrayList<>();
+        List<Room> roomList = new ArrayList<>();
         for(List<SimpleEdge> cycle : cycles) {
-            Set<Pair<Integer, Integer>> room = new HashSet<>();
+            Room room = new Room();
             for(SimpleEdge se : cycle) {
-                room.add(se.getSource());
+                room.addTile(se.getSource());
             }
             roomList.add(room);
         }
@@ -137,10 +142,10 @@ public class GameGrid {
     }
 
     public void printWallGraph() {
-        ComponentNameProvider<Pair<Integer, Integer>> vertexIdProvider = ele -> "V_" + ele.getFirst() + "_" + ele.getSecond();
-        ComponentNameProvider<Pair<Integer, Integer>> vertexLabelProvider = ele -> "(" + ele.getFirst() + "," + ele.getSecond() + ")";
+        ComponentNameProvider<Tile> vertexIdProvider = ele -> "V_" + ele.getFirst() + "_" + ele.getSecond();
+        ComponentNameProvider<Tile> vertexLabelProvider = ele -> "(" + ele.getFirst() + "," + ele.getSecond() + ")";
 
-        GraphExporter<Pair<Integer, Integer>, SimpleEdge> exporter =
+        GraphExporter<Tile, SimpleEdge> exporter =
                 new DOTExporter<>(vertexIdProvider, vertexLabelProvider, null);
         Writer writer = new StringWriter();
         try {
