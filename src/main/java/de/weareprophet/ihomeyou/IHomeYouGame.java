@@ -112,7 +112,7 @@ public class IHomeYouGame extends Game {
 
     private int calculateSpaceFulfilment() {
         int spaceValue = 0;
-        List<Room> rooms = grid.calculateRooms();
+        List<Room> rooms = grid.getRooms();
         for (final Room r : rooms) {
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
             int roomSize = r.getTiles().size();

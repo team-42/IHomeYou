@@ -24,6 +24,8 @@ import java.util.*;
 
 
 public class GameGrid {
+    public List<Room> rooms;
+
     private Table<Integer, Integer, FurnitureObject> gameGrid;
     private Table<Integer, Integer, ImageObject> gameGridGroundTile;
     private List<ImageObject> walls;
@@ -37,8 +39,7 @@ public class GameGrid {
     static final int ROWS = 10;
 
     GameGrid(IHomeYouGame iHomeYouGame) {
-        gameGrid = HashBasedTable.create();
-        walls = new ArrayList<>();
+        init();
         ihyg = iHomeYouGame;
 
         initGameGridGroundTiles();
@@ -50,19 +51,34 @@ public class GameGrid {
         gameGrid.values().forEach(fo -> ihyg.removeObject(fo.getObj()));
         walls.forEach(ihyg::removeObject);
 
+        init();
+    }
+
+    private void init() {
         gameGrid = HashBasedTable.create();
         gameGridGroundTile = HashBasedTable.create();
         walls = new ArrayList<>();
+        rooms = new ArrayList<>();
+        graph = null;
     }
 
     private void initGameGridGroundTiles() {
         gameGridGroundTile = HashBasedTable.create();
         for(int c = 0; c < COLS; c++) {
             for(int r = 0; r < ROWS; r++) {
-                ImageObject initialGrass = new ImageObject(FloorType.GRASS.getResource(), c * SIZE + BORDERS, r * SIZE + BORDERS);
-                gameGridGroundTile.put(r, c, initialGrass);
-                ihyg.addObject(initialGrass);
+                setGroundTile(FloorType.GRASS, c, r);
             }
+        }
+    }
+
+    private void setGroundTile(FloorType floorType, int column, int row) {
+
+        if(gameGridGroundTile.contains(row, column)) {
+            gameGridGroundTile.get(row, column).setRes(floorType.getResource());
+        } else {
+            ImageObject tileImage = new ImageObject(floorType.getResource(), column * SIZE + BORDERS, row * SIZE + BORDERS);
+            gameGridGroundTile.put(row, column, tileImage);
+            ihyg.addObject(tileImage);
         }
     }
 
@@ -124,16 +140,31 @@ public class GameGrid {
         }
         walls.add(obj);
         ihyg.addObject(obj);
-        List<Room> sets = calculateRooms();
-        System.out.println("Room Count: " + sets.size());
+
+        rooms = calculateRooms();
+        setRoomGroundTile();
+
+        System.out.println("Room Count: " + rooms.size());
 //        printWallGraph();
+    }
+
+    private void setRoomGroundTile() {
+        for(Room r : rooms) {
+            for (Tile t : r.getTiles()) {
+                setGroundTile(FloorType.WOOD, t.getColumn(), t.getRow());
+            }
+        }
+    }
+
+    public List<Room> getRooms() {
+        return rooms;
     }
 
     public enum WallDirection {
         TOP, BOTTOM, LEFT, RIGHT
     }
 
-    public List<Room> calculateRooms() {
+    private List<Room> calculateRooms() {
         Set<List<SimpleEdge>> cycles = CycleDetection.calculate(graph);
 
         List<Room> roomList = new ArrayList<>();
