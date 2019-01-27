@@ -19,7 +19,7 @@ class Player {
     private final SimpleText skillDisplay;
     private int row = 0;
     private int column = 0;
-    private int budget = 1000;
+    private int budget = 500;
     private int skillPoints = 0;
 
     Player(IHomeYouGame game) {
@@ -70,6 +70,9 @@ class Player {
         return column;
     }
 
+    boolean canPay(int amount) {
+        return amount <= budget;
+    }
 
     boolean pay(int amount) {
         if (amount <= budget) {

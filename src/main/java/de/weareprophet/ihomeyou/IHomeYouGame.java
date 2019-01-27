@@ -3,6 +3,8 @@ package de.weareprophet.ihomeyou;
 import de.weareprophet.ihomeyou.asset.AssetSelector;
 import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.WallType;
+import de.weareprophet.ihomeyou.customer.Customer;
+import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ public class IHomeYouGame extends Game {
     GameGrid grid;
     private Player player;
     private AssetSelector assetSelector;
+    private Customer customer = Customer.easyCustomer();
 
 
     public static void main(String[] args) {
@@ -38,14 +41,22 @@ public class IHomeYouGame extends Game {
                 event -> {
                     final AssetType selectedAsset = assetSelector.getSelected();
                     LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
-                    if (assetSelector.isSelectedAvailable() && player.pay(selectedAsset.getPrice())) {
-                        grid.setObject(
-                                player.getRow(),
-                                player.getColumn(),
-                                selectedAsset);
+                    if (assetSelector.isSelectedAvailable() && player.canPay(selectedAsset.getPrice()) && grid.setObject(
+                            player.getRow(),
+                            player.getColumn(),
+                            selectedAsset)) {
+                        player.pay(selectedAsset.getPrice());
                     } else {
                         player.signalMistake();
                     }
+                });
+        addKeyReleasedEvent(KeyCode.ENTER.getCode(),
+                event -> {
+                    final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
+                    for (final AssetType asset : grid.getAssetsInGrid()) {
+                        fulfilment.add(asset.getNeedsFulfillment());
+                    }
+                    LOG.info("Customer satisfaction: {}", customer.measureSatisfaction(fulfilment.build()));
                 });
 
         addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP));

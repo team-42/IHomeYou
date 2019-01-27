@@ -65,7 +65,7 @@ public class AssetSelector {
             availability.setText("Item is available");
             availability.setColor(ColorResource.GREEN);
         } else {
-            availability.setText("Required skill to unlock: " + getSelected().getSkillPoints());
+            availability.setText("Required skill to [U]nlock: " + getSelected().getSkillPoints());
             availability.setColor(ColorResource.RED);
         }
         LOG.debug("Selected asset changed to: {}", selected);
