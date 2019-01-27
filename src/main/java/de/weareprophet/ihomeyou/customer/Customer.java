@@ -62,7 +62,7 @@ public class Customer {
             needs.add(needsType, intensity);
         }
 
-        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 400));
+        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 350));
         int prestige = 1 + (difficulty / 140);
         return new Customer(numberOfPpl, overallNeeds * 2, prestige, needs
                 .build());
