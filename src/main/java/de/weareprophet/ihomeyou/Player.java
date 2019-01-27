@@ -19,7 +19,7 @@ class Player {
     private final SimpleText skillDisplay;
     private int row = 0;
     private int column = 0;
-    private int budget = 0;
+    private int budget = 100;
     private int skillPoints = 1;
 
     Player(IHomeYouGame game) {

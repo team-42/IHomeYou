@@ -38,55 +38,55 @@ public class Customer {
         final NeedsFulfillment.Builder needs = NeedsFulfillment.builder();
         final Random r = new Random();
         int overallNeeds = 0;
-        final int numPpl = Math.min(8, 1 + (maxDifficulty >= 100 ? r.nextInt(maxDifficulty / 100) : 0));
 
-        int intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+        int intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Space, intensity);
 
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Food, intensity);
 
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Rest, intensity);
 
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
         overallNeeds += intensity;
         needs.add(NeedsType.Storage, intensity);
 
         if (maxDifficulty > 60) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Work, intensity);
 
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Comfort, intensity);
 
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Personal, intensity);
         }
 
         if (maxDifficulty > 80) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Decoration, intensity);
 
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Cleanliness, intensity);
         }
 
         if (maxDifficulty > 120) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty * numPpl / 2);
+            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
             needs.add(NeedsType.Luxury, intensity);
         }
 
-        return new Customer(numPpl, overallNeeds * 3, Math.min(4, overallNeeds / 100), needs
+        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 200));
+        return new Customer(numberOfPpl, overallNeeds * 2, numberOfPpl, needs
                 .build());
     }
 
@@ -113,16 +113,16 @@ public class Customer {
      * @return The customer satisfaction between 0 (not satisfied) and 1 (entirely satisfied).
      */
     public double measureSatisfaction(final NeedsFulfillment fulfillment) {
-        double satisfaction = 0.5;
+        double satisfaction = 0.0;
 
         for (final NeedsType t : NeedsType.values()) {
             final Integer customerDesireForType = this.desire.getNeeds().getOrDefault(t, 0);
             final double satisfactionForType;
             final double fulfilmentForType = fulfillment.getNeeds().getOrDefault(t, 0).doubleValue();
             if (customerDesireForType > 0) {
-                satisfactionForType = Math.min(2.0, (fulfilmentForType * 3.0 / customerDesireForType.doubleValue()) - 2.0);
+                satisfactionForType = Math.min(1.2, (fulfilmentForType * 3.0 / customerDesireForType.doubleValue()) - 2.0);
             } else {
-                satisfactionForType = Math.min(2.0, fulfilmentForType / 200.0) / 2.0;
+                satisfactionForType = 1.0 + Math.min(0.2, fulfilmentForType / 1000.0);
             }
             LOG.debug("Need for type {} is {}. Delivered have been {}. Resulting score is {}.", t, customerDesireForType, fulfilmentForType, satisfactionForType);
             satisfaction += satisfactionForType / NeedsType.values().length;

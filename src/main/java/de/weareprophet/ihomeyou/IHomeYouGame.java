@@ -27,7 +27,7 @@ import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
-    private static final int MAX_DIFFICULTY = 400;
+    private static final int MAX_DIFFICULTY = 200;
 
     private enum GameState {
         InLevel,
