@@ -234,7 +234,7 @@ public class IHomeYouGame extends Game {
                         applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Personal);
                         break;
                     case HALLWAY:
-                        fulfilment.add(NeedsType.Space, 30);
+                        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
                         break;
                     default:
                 }
@@ -242,10 +242,11 @@ public class IHomeYouGame extends Game {
         }
     }
 
-    private void applyRoomPerk(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount, NeedsType cleanliness) {
+    private void applyRoomPerk(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount, NeedsType needsType) {
         for (final FurnitureObject assetInRoom : assetsInRoom) {
-            fulfilment.add(cleanliness, assetInRoom.getType().getNeedsFulfillment().getNeeds().getOrDefault(cleanliness, 0) * (roomSize - assetCount) / 30);
+            fulfilment.add(needsType, assetInRoom.getType().getNeedsFulfillment().getNeeds().getOrDefault(needsType, 0) * (roomSize - assetCount) / 30);
         }
+        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
     }
 
     private void initNeedLabels() {
