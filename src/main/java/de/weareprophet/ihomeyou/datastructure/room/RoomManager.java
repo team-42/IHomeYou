@@ -119,6 +119,10 @@ public class RoomManager {
     }
 
     public void executeTileChange(Room r, Table<Integer, Integer, FurnitureObject> gameGrid, GroundTileHandler gth) {
+        if(r.getRoomType() != null && r.getRoomType().equals(RoomTypes.OUTDOOR)) {
+            return;
+        }
+
         List<FurnitureObject> furnitureObjects = r.getRoomInventory(gameGrid);
         if(furnitureObjects.size() > 0) {
             Map<RoomTypes, Integer> roomTypePerFurnitureCountMap = new HashMap<>();
