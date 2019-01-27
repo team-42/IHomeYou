@@ -89,9 +89,13 @@ public class RoomManager {
             }
 
             if (maxEntry.getValue() >= furnitureObjects.size() / 2) {
-                if (maxEntry.getKey().equals(RoomTypes.BATH) || maxEntry.getKey().equals(RoomTypes.KITCHEN)) {
+                if (maxEntry.getKey().equals(RoomTypes.BATH)) {
                     for (Tile t : r.getTiles()) {
                         gth.setGroundTile(FloorType.TILE, t.getColumn(), t.getRow());
+                    }
+                } else if(maxEntry.getKey().equals(RoomTypes.KITCHEN)) {
+                    for (Tile t : r.getTiles()) {
+                        gth.setGroundTile(FloorType.TILE_KITCHEN, t.getColumn(), t.getRow());
                     }
                 } else {
                     for (Tile t : r.getTiles()) {

@@ -7,6 +7,10 @@ public class WallEdge extends SimpleEdge {
 
     private WallType type;
 
+    public WallEdge() {
+        
+    }
+
     public WallEdge(WallType type) {
         this.type = type;
     }
