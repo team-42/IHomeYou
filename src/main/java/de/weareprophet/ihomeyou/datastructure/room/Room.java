@@ -8,6 +8,7 @@ import java.util.*;
 
 public class Room {
     private Set<Tile> roomTiles = new HashSet<>();
+    private RoomTypes roomType;
 
     public void addAllTiles(Collection<Tile> tiles) {
         roomTiles.addAll(tiles);
@@ -27,6 +28,14 @@ public class Room {
         }
 
         return inventory;
+    }
+
+    public void setRoomType(RoomTypes roomType) {
+        this.roomType = roomType;
+    }
+
+    public RoomTypes getRoomType() {
+        return roomType;
     }
 
     @Override

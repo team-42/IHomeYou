@@ -3,7 +3,6 @@ package de.weareprophet.ihomeyou;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.asset.AssetType;
-import de.weareprophet.ihomeyou.asset.FloorType;
 import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.datastructure.GroundTileHandler;
 import de.weareprophet.ihomeyou.datastructure.room.Room;
@@ -120,44 +119,44 @@ public class GameGrid {
         if(!gameGrid.contains(row, column)) {
             ImageObject obj = new ImageObject(at.getResource(), SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
             gameGrid.put(row, column, FurnitureObject.of(at, obj));
-            roomManager.executeTileChange(gameGrid, gth);
+            roomManager.executeTileChangesForAllRooms(gameGrid, gth);
             ihyg.addObject(obj);
             return true;
         }
         return false;
     }
 
-    public void setWall(int row, int column, ImageResource res, WallDirection dir) {
+    public boolean setWall(int row, int column, ImageResource res, WallDirection dir) {
         if(row == 0 || column == 0 || row == ROWS-1 || column == COLS-1) {
-            return;
+            return false;
         }
 
         ImageObject obj = null;
         switch (dir) {
             case TOP:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
-//                wallGraph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
+                if(wallGraph.containsEdge(Tile.of(column, row), Tile.of(column+1,row))) return false;
                 wallGraph.addEdge(Tile.of(column, row), Tile.of(column+1,row));
 
                 if(row-1 >= 0) tileGraph.removeEdge(Tile.of(column, row-1), Tile.of(column, row));
                 break;
             case BOTTOM:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
-//                wallGraph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
+                if(wallGraph.containsEdge(Tile.of(column, row+1), Tile.of(column+1,row+1))) return false;
                 wallGraph.addEdge(Tile.of(column, row+1), Tile.of(column+1,row+1));
 
                 if(row+1 < ROWS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column, row+1));
                 break;
             case LEFT:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
-//                wallGraph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
+                if(wallGraph.containsEdge(Tile.of(column, row), Tile.of(column,row+1))) return false;
                 wallGraph.addEdge(Tile.of(column, row), Tile.of(column,row+1));
 
                 if(column-1 >= 0) tileGraph.removeEdge(Tile.of(column-1, row), Tile.of(column, row));
                 break;
             case RIGHT:
                 obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
-//                wallGraph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
+                if(wallGraph.containsEdge(Tile.of(column+1, row), Tile.of(column+1,row+1))) return false;
                 wallGraph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
 
                 if(column+1 < COLS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column+1, row));
@@ -167,10 +166,11 @@ public class GameGrid {
         ihyg.addObject(obj);
 
         roomManager.calculateRooms(tileGraph);
-        roomManager.setRoomGroundTile(gth, wallGraph);
+        roomManager.setRoomGroundTile(gameGrid, gth, wallGraph);
 
 //        printGraph(tileGraph);
 //        printGraph(wallGraph);
+        return true;
     }
 
     public enum WallDirection {
