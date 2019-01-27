@@ -114,7 +114,7 @@ public class IHomeYouGame extends Game {
         int spaceValue = 0;
         List<Room> rooms = grid.calculateRooms();
         for (final Room r : rooms) {
-            Collection<AssetType> assetsInRoom = grid.getAssetsInRoom(r);
+            Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
             int roomSize = r.getTiles().size();
             int assetCount = assetsInRoom.size();
             LOG.debug("Room with {} tiles and {} assets", roomSize, assetCount);
@@ -125,8 +125,8 @@ public class IHomeYouGame extends Game {
             int bestCount = 0;
             for (final RoomTypes roomType : RoomTypes.values()) {
                 int validAssetCount = 0;
-                for (final AssetType asset : assetsInRoom) {
-                    if (roomType.validRoomAsset(asset)) {
+                for (final FurnitureObject asset : assetsInRoom) {
+                    if (roomType.validRoomAsset(asset.getType())) {
                         validAssetCount++;
                     }
                 }
