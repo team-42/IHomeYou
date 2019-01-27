@@ -31,7 +31,7 @@ import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
-    private static final int MAX_DIFFICULTY = 200;
+    private static final int MAX_DIFFICULTY = 400;
     private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
 
     private enum GameState {
@@ -67,7 +67,7 @@ public class IHomeYouGame extends Game {
         setTitle("I Home You!");
         grid = new GameGrid(this);
         player = new Player(this);
-        difficulty = 40;
+        difficulty = 80;
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
@@ -81,8 +81,8 @@ public class IHomeYouGame extends Game {
         addObject(satisfactionOutput);
         prestigeOutput = new SimpleText(ColorResource.GREEN, "", getXOfRightColumn() + 50, 360);
         nextLevelOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter for next customer", getXOfRightColumn(), 380);
-        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300,2),getXOfRightColumn(),60));
-        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300,2),getXOfRightColumn(),400));
+        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 60));
+        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 400));
 
         addKeyReleasedEvent(KeyCode.SPACE.getCode(),
                 event -> {
@@ -162,7 +162,7 @@ public class IHomeYouGame extends Game {
                     prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
                     addObject(prestigeOutput);
                     player.addSkillPoints(currentCustomer.getPrestige());
-                    difficulty = Math.min(MAX_DIFFICULTY, (int) Math.round((float) difficulty * 1.2));
+                    difficulty = Math.min(MAX_DIFFICULTY, difficulty + 40);
                     nextCustomer(satisfaction);
                     gameState = GameState.BetweenLevels;
                 }
@@ -206,20 +206,18 @@ public class IHomeYouGame extends Game {
                 }
             }
 
-            if (bestCount >= 3) {
-                boolean roomConsistency = true;
-                for (final RoomTypes roomType : RoomTypes.values()) {
-                    if (roomType == bestType) {
-                        continue;
-                    }
-                    if (typeCount.get(roomType) > bestCount - 3) {
-                        roomConsistency = false;
-                    }
+            boolean roomConsistency = true;
+            for (final RoomTypes roomType : RoomTypes.values()) {
+                if (roomType == bestType) {
+                    continue;
                 }
-                LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
-                if (roomConsistency) {
-                    spaceValue += 30;
+                if (typeCount.get(roomType) >= bestCount - 2) {
+                    roomConsistency = false;
                 }
+            }
+            LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
+            if (roomConsistency) {
+                spaceValue += 30;
             }
         }
         return spaceValue;
@@ -246,15 +244,24 @@ public class IHomeYouGame extends Game {
             if (desireForType == 0) {
                 needLabel.setText("None");
                 needLabel.setColor(ColorResource.LIGHT_GRAY);
-            } else if (desireForType < 50) {
+            } else if (desireForType < 60) {
+                needLabel.setText("Minimal");
+                needLabel.setColor(new ColorResource(0, 213, 106));
+            } else if (desireForType < 120) {
                 needLabel.setText("Low");
                 needLabel.setColor(ColorResource.GREEN);
-            } else if (desireForType < 100) {
+            } else if (desireForType < 180) {
+                needLabel.setText("Moderate");
+                needLabel.setColor(new ColorResource(156, 240, 0));
+            } else if (desireForType < 240) {
                 needLabel.setText("Medium");
                 needLabel.setColor(ColorResource.ORANGE);
-            } else {
+            } else if (desireForType < 300) {
                 needLabel.setText("High");
                 needLabel.setColor(ColorResource.RED);
+            } else {
+                needLabel.setText("Serious");
+                needLabel.setColor(new ColorResource(128, 0, 0));
             }
         }
     }

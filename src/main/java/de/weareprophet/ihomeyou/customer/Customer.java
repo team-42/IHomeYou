@@ -3,7 +3,7 @@ package de.weareprophet.ihomeyou.customer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Random;
+import java.util.*;
 
 public class Customer {
 
@@ -34,61 +34,36 @@ public class Customer {
                 .build());
     }
 
-    public static Customer rngCustomer(final int maxDifficulty) {
+    public static Customer rngCustomer(final int difficulty) {
         final NeedsFulfillment.Builder needs = NeedsFulfillment.builder();
         final Random r = new Random();
         int overallNeeds = 0;
 
-        int intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-        overallNeeds += intensity;
-        needs.add(NeedsType.Space, intensity);
+        final Set<NeedsType> possibleNeeds = EnumSet.allOf(NeedsType.class);
 
-
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-        overallNeeds += intensity;
-        needs.add(NeedsType.Rest, intensity);
-
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-        overallNeeds += intensity;
-        needs.add(NeedsType.Storage, intensity);
-
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-        overallNeeds += intensity;
-        needs.add(NeedsType.Cleanliness, intensity);
-
-
-        if (maxDifficulty > 60) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-            overallNeeds += intensity;
-            needs.add(NeedsType.Work, intensity);
-
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-            overallNeeds += intensity;
-            needs.add(NeedsType.Food, intensity);
-
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-            overallNeeds += intensity;
-            needs.add(NeedsType.Personal, intensity);
+        if (difficulty < 120) {
+            possibleNeeds.remove(NeedsType.Comfort);
+            possibleNeeds.remove(NeedsType.Food);
+        }
+        if (difficulty < 180) {
+            possibleNeeds.remove(NeedsType.Decoration);
+        }
+        if (difficulty < 240) {
+            possibleNeeds.remove(NeedsType.Luxury);
         }
 
-        if (maxDifficulty > 80) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
+        List<NeedsType> actualNeeds = Arrays.asList(possibleNeeds.toArray(new NeedsType[0]));
+        Collections.shuffle(actualNeeds);
+        final int numNeeds = Math.min(possibleNeeds.size(), difficulty / 40);
+        for (int i = 0; i < numNeeds; i++) {
+            NeedsType needsType = actualNeeds.get(i);
+            int intensity = r.nextInt(difficulty);
             overallNeeds += intensity;
-            needs.add(NeedsType.Decoration, intensity);
-
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-            overallNeeds += intensity;
-            needs.add(NeedsType.Comfort, intensity);
+            needs.add(needsType, intensity);
         }
 
-        if (maxDifficulty > 120) {
-            intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-            overallNeeds += intensity;
-            needs.add(NeedsType.Luxury, intensity);
-        }
-
-        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 200));
-        int prestige = 1 + (maxDifficulty / 70);
+        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 400));
+        int prestige = 1 + (difficulty / 140);
         return new Customer(numberOfPpl, overallNeeds * 2, prestige, needs
                 .build());
     }
