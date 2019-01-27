@@ -39,11 +39,8 @@ public class GameGrid {
     static final int ROWS = 10;
 
     GameGrid(IHomeYouGame iHomeYouGame) {
-        init();
         ihyg = iHomeYouGame;
-
-        initGameGridGroundTiles();
-        graph = initNoWallGraph();
+        init();
     }
 
     public void resetGameGrid() {
@@ -54,12 +51,15 @@ public class GameGrid {
         init();
     }
 
-    private void init() {
+    public void init() {
         gameGrid = HashBasedTable.create();
         gameGridGroundTile = HashBasedTable.create();
         walls = new ArrayList<>();
         rooms = new ArrayList<>();
         graph = null;
+
+        initGameGridGroundTiles();
+        graph = initNoWallGraph();
     }
 
     private void initGameGridGroundTiles() {
@@ -168,13 +168,27 @@ public class GameGrid {
         Set<List<SimpleEdge>> cycles = CycleDetection.calculate(graph);
 
         List<Room> roomList = new ArrayList<>();
+        // simple approx
         for(List<SimpleEdge> cycle : cycles) {
-            Room room = new Room();
+            int maxTop = ROWS;
+            int maxLeft = COLS;
+            int maxRight = 0;
+            int maxBottom = 0;
             for(SimpleEdge se : cycle) {
-                room.addTile(se.getSource());
+//                se.getSource().getColumn() < maxTop ? maxTop = se.getSource().getColumn();
+//                if(se.getSource().getColumn() > )
             }
-            roomList.add(room);
         }
+
+
+        // wrong
+//        for(List<SimpleEdge> cycle : cycles) {
+//            Room room = new Room();
+//            for(SimpleEdge se : cycle) {
+//                room.addTile(se.getSource());
+//            }
+//            roomList.add(room);
+//        }
 
         return roomList;
     }
