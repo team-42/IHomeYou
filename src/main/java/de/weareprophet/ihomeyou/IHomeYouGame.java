@@ -42,7 +42,7 @@ public class IHomeYouGame extends Game {
                         grid.setObject(
                                 player.getRow(),
                                 player.getColumn(),
-                                selectedAsset.getResource());
+                                selectedAsset);
                     } else {
                         player.signalMistake();
                     }

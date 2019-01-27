@@ -2,12 +2,15 @@ package de.weareprophet.ihomeyou;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import de.weareprophet.ihomeyou.algorithm.CycleDetection;
+import de.weareprophet.ihomeyou.asset.AssetType;
 import org.frice.obj.sub.ImageObject;
 import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
 import org.frice.util.shape.FRectangle;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
@@ -18,10 +21,12 @@ import org.jgrapht.io.GraphExporter;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.List;
+import java.util.Set;
 
 
 public class GameGrid {
-    private Table<Integer, Integer, ImageObject> gameGrid;
+    private Table<Integer, Integer, AssetType> gameGrid;
     private IHomeYouGame ihyg;
     private Graph<Pair<Integer, Integer>, DefaultEdge> graph;
 
@@ -53,55 +58,60 @@ public class GameGrid {
                 graph.addVertex(Pair.of(c, r));
             }
         }
-
-        // add edges
-        for(int c = 0; c <= COLS+1; c++) {
-            for (int r = 0; r <= ROWS+1; r++) {
-                if(c+1 <= COLS+1) {
-                    graph.addEdge(Pair.of(c, r), Pair.of(c+1, r));
-                }
-
-                if(r+1 <= ROWS+1) {
-                    graph.addEdge(Pair.of(c, r), Pair.of(c, r+1));
-                }
-            }
-        }
+//
+//        // add edges
+//        for(int c = 0; c <= COLS+1; c++) {
+//            for (int r = 0; r <= ROWS+1; r++) {
+//                if(c+1 <= COLS+1) {
+//                    graph.addEdge(Pair.of(c, r), Pair.of(c+1, r));
+//                }
+//
+//                if(r+1 <= ROWS+1) {
+//                    graph.addEdge(Pair.of(c, r), Pair.of(c, r+1));
+//                }
+//            }
+//        }
         return graph;
     }
 
-    public boolean setObject(int row, int column, ImageResource res) {
+    public boolean setObject(int row, int column, AssetType at) {
         if(!gameGrid.contains(row, column)) {
-            ImageObject obj = new ImageObject(res, SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
-            gameGrid.put(row, column, obj);
+            ImageObject obj = new ImageObject(at.getResource(), SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
+            gameGrid.put(row, column, at);
             ihyg.addObject(obj);
             return true;
         }
         return false;
     }
 
-    public boolean setWall(int row, int column, ImageResource res, WallDirection dir) {
+    public void setWall(int row, int column, ImageResource res, WallDirection dir) {
 
         ImageObject obj = null;
         switch (dir) {
             case TOP:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
-                graph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
+//                graph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
+                graph.addEdge(Pair.of(column, row), Pair.of(column+1,row));
                 break;
             case BOTTOM:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
-                graph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
+//                graph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
+                graph.addEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
                 break;
             case LEFT:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
-                graph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
+//                graph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
+                graph.addEdge(Pair.of(column, row), Pair.of(column,row+1));
                 break;
             case RIGHT:
                 obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
-                graph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
+//                graph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
+                graph.addEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
                 break;
         }
         ihyg.addObject(obj);
-        return false;
+        calculateRooms();
+//        printWallGraph();
     }
 
     public enum WallDirection {
@@ -109,7 +119,7 @@ public class GameGrid {
     }
 
     public void calculateRooms() {
-
+        System.out.println("Num Rooms: " + CycleDetection.calculate(graph));
     }
 
     public void printWallGraph() {
