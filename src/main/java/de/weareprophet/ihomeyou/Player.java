@@ -19,7 +19,7 @@ class Player {
     private final SimpleText skillDisplay;
     private int row = 0;
     private int column = 0;
-    private int budget = 500;
+    private int budget = 0;
     private int skillPoints = 1;
 
     Player(IHomeYouGame game) {
@@ -99,5 +99,15 @@ class Player {
         }
         this.skillPoints -= pointsToSpend;
         this.skillDisplay.setText(String.valueOf(this.skillPoints));
+    }
+
+    void addSkillPoints(int pointsToAdd) {
+        skillPoints += pointsToAdd;
+        this.skillDisplay.setText(String.valueOf(this.skillPoints));
+    }
+
+    void addBudget(int amount) {
+        budget += amount;
+        budgetDisplay.setText(String.valueOf(budget));
     }
 }

@@ -3,6 +3,8 @@ package de.weareprophet.ihomeyou.customer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Random;
+
 public class Customer {
 
     private static final Logger LOG = LogManager.getLogger(Customer.class);
@@ -11,18 +13,39 @@ public class Customer {
 
     private final int numberOfPpl;
 
-    private Customer(int numberOfPpl, NeedsFulfillment desire) {
+    private final int budget;
+
+    private final int prestige;
+
+    private Customer(int numberOfPpl, int budget, int prestige, NeedsFulfillment desire) {
         this.numberOfPpl = numberOfPpl;
+        this.budget = budget;
+        this.prestige = prestige;
         this.desire = desire;
     }
 
     public static Customer easyCustomer() {
-        return new Customer(1, NeedsFulfillment.builder()
+        return new Customer(1, 500, 2, NeedsFulfillment.builder()
                 .add(NeedsType.Storage, 40)
                 .add(NeedsType.Food, 40)
                 .add(NeedsType.Rest, 40)
                 .add(NeedsType.Personal, 20)
                 .add(NeedsType.Space, 20)
+                .build());
+    }
+
+    public static Customer rngCustomer(final int maxDifficulty) {
+        final NeedsFulfillment.Builder needs = NeedsFulfillment.builder();
+        final Random r = new Random();
+        int overallNeeds = 0;
+        for (final NeedsType t : NeedsType.values()) {
+            if (r.nextBoolean()) {
+                int intensity = r.nextInt(maxDifficulty);
+                overallNeeds += intensity;
+                needs.add(t, intensity);
+            }
+        }
+        return new Customer(1, overallNeeds * 3, overallNeeds / 100, needs
                 .build());
     }
 
@@ -32,6 +55,14 @@ public class Customer {
 
     public NeedsFulfillment getDesire() {
         return desire;
+    }
+
+    public int getBudget() {
+        return budget;
+    }
+
+    public int getPrestige() {
+        return prestige;
     }
 
     /**

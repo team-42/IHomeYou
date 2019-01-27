@@ -5,8 +5,8 @@ import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
-import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.customer.NeedsType;
+import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.datastructure.Room;
 import de.weareprophet.ihomeyou.datastructure.RoomTypes;
 import javafx.scene.input.KeyCode;
@@ -16,9 +16,12 @@ import org.frice.Game;
 import org.frice.obj.button.SimpleText;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
+import org.jetbrains.annotations.NotNull;
 
+import java.awt.event.KeyEvent;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static org.frice.Initializer.launch;
 
@@ -28,10 +31,14 @@ public class IHomeYouGame extends Game {
     GameGrid grid;
     private Player player;
     private AssetSelector assetSelector;
-    private Customer customer;
+    private int difficulty;
+    private Customer currentCustomer;
     private SimpleText customerNumberOfPpl;
     private Map<NeedsType, SimpleText> customerNeedLabels;
     private SimpleText satisfactionOutput;
+    private SimpleText nextLevelOutput;
+    private SimpleText prestigeOutput;
+    private boolean withinLevel = true;
 
 
     public static void main(String[] args) {
@@ -47,7 +54,7 @@ public class IHomeYouGame extends Game {
         setTitle("I Home You!");
         grid = new GameGrid(this);
         player = new Player(this);
-        customer = Customer.easyCustomer();
+        difficulty = 40;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
         addObject(new SimpleText("Current customer information", getXOfRightColumn(), 80));
@@ -57,6 +64,8 @@ public class IHomeYouGame extends Game {
         addObject(new SimpleText("Customer satisfaction: ", getXOfRightColumn(), 340));
         satisfactionOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter to evaluate", getXOfRightColumn(), 360);
         addObject(satisfactionOutput);
+        prestigeOutput = new SimpleText(ColorResource.GREEN, "", getXOfRightColumn() + 50, 360);
+        nextLevelOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter for next customer", getXOfRightColumn(), 380);
 
         addKeyReleasedEvent(KeyCode.SPACE.getCode(),
                 event -> {
@@ -71,29 +80,6 @@ public class IHomeYouGame extends Game {
                         player.signalMistake();
                     }
                 });
-        addKeyReleasedEvent(KeyCode.ENTER.getCode(),
-                event -> {
-                    final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
-                    for (final FurnitureObject asset : grid.getAssetsInGrid()) {
-                        fulfilment.add(asset.getType().getNeedsFulfillment());
-                    }
-                    fulfilment.add(NeedsType.Space, calculateSpaceFulfilment());
-                    double satisfaction = customer.measureSatisfaction(fulfilment.build());
-                    LOG.info("Customer satisfaction: {}", satisfaction);
-                    satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
-                    final ColorResource color;
-                    if (satisfaction < 0.2) {
-                        color = ColorResource.RED;
-                    } else if (satisfaction < 0.5) {
-                        color = ColorResource.ORANGE;
-                    } else if (satisfaction < 0.8) {
-                        color = new ColorResource(156, 240, 0);
-                    } else {
-                        color = ColorResource.GREEN;
-                    }
-                    satisfactionOutput.setColor(color);
-                });
-
         addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP));
         addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT));
         addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM));
@@ -106,8 +92,56 @@ public class IHomeYouGame extends Game {
                 LOG.debug("Unlocked asset: {}", selectedAsset.getName());
             }
         });
+        addKeyReleasedEvent(KeyCode.ENTER.getCode(), getEvaluationListener());
 
+        nextCustomer();
+    }
+
+    private void nextCustomer() {
+        currentCustomer = Customer.rngCustomer(difficulty);
+        player.addBudget(currentCustomer.getBudget());
         renderCustomerInfo();
+    }
+
+    @NotNull
+    private Consumer<KeyEvent> getEvaluationListener() {
+        return event -> {
+            if (withinLevel) {
+                final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
+                for (final FurnitureObject asset : grid.getAssetsInGrid()) {
+                    fulfilment.add(asset.getType().getNeedsFulfillment());
+                }
+                fulfilment.add(NeedsType.Space, calculateSpaceFulfilment());
+                double satisfaction = currentCustomer.measureSatisfaction(fulfilment.build());
+                LOG.info("Customer satisfaction: {}", satisfaction);
+                satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
+                prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
+                addObject(prestigeOutput);
+                player.addSkillPoints(currentCustomer.getPrestige());
+                addObject(nextLevelOutput);
+                final ColorResource color;
+                if (satisfaction < 0.2) {
+                    color = ColorResource.RED;
+                } else if (satisfaction < 0.5) {
+                    color = ColorResource.ORANGE;
+                } else if (satisfaction < 0.8) {
+                    color = new ColorResource(156, 240, 0);
+                } else {
+                    color = ColorResource.GREEN;
+                }
+                satisfactionOutput.setColor(color);
+                withinLevel = false;
+            } else {
+                satisfactionOutput.setColor(ColorResource.LIGHT_GRAY);
+                satisfactionOutput.setText("Press Enter to evaluate");
+                removeObject(prestigeOutput);
+                removeObject(nextLevelOutput);
+                difficulty = (int) Math.round((float) difficulty * 1.2);
+                nextCustomer();
+                withinLevel = true;
+            }
+
+        };
     }
 
     private int calculateSpaceFulfilment() {
@@ -169,8 +203,8 @@ public class IHomeYouGame extends Game {
     }
 
     private void renderCustomerInfo() {
-        customerNumberOfPpl.setText(String.valueOf(customer.getNumberOfPpl()));
-        Map<NeedsType, Integer> customerDesires = customer.getDesire().getNeeds();
+        customerNumberOfPpl.setText(String.valueOf(currentCustomer.getNumberOfPpl()));
+        Map<NeedsType, Integer> customerDesires = currentCustomer.getDesire().getNeeds();
         for (final NeedsType t : NeedsType.values()) {
             final Integer desireForType = customerDesires.getOrDefault(t, 0);
             SimpleText needLabel = customerNeedLabels.get(t);
