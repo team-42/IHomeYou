@@ -18,10 +18,10 @@ public class Tile extends Pair<Integer, Integer> {
     }
 
     public Integer getRow() {
-        return getFirst();
+        return getSecond();
     }
 
     public Integer getColumn() {
-        return getSecond();
+        return getFirst();
     }
 }

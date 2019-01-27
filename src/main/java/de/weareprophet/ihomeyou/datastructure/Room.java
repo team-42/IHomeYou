@@ -11,6 +11,10 @@ public class Room {
         roomTiles.add(tile);
     }
 
+    public void addAllTiles(Collection<Tile> tiles) {
+        roomTiles.addAll(tiles);
+    }
+
     public Collection<Tile> getTiles() {
         return roomTiles;
     }
@@ -25,5 +29,10 @@ public class Room {
         }
 
         return inventory;
+    }
+
+    @Override
+    public String toString() {
+        return "Tiles: " + roomTiles;
     }
 }

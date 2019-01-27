@@ -12,6 +12,7 @@ import de.weareprophet.ihomeyou.datastructure.Tile;
 import org.frice.obj.sub.ImageObject;
 import org.frice.resource.image.ImageResource;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.io.ComponentNameProvider;
 import org.jgrapht.io.DOTExporter;
@@ -148,23 +149,29 @@ public class GameGrid {
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                wallGraph.removeEdge(Pair.of(column, row), Pair.of(column+1,row));
                 wallGraph.addEdge(Tile.of(column, row), Tile.of(column+1,row));
-                tileGraph.removeEdge(Tile.of(column, row), Tile.of(column+1, row));
+
+                if(row-1 >= 0) tileGraph.removeEdge(Tile.of(column, row-1), Tile.of(column, row));
                 break;
             case BOTTOM:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
 //                wallGraph.removeEdge(Pair.of(column, row+1), Pair.of(column+1,row+1));
                 wallGraph.addEdge(Tile.of(column, row+1), Tile.of(column+1,row+1));
-//                tileGraph.removeEdge(Tile.of(c, r+1))
+
+                if(row+1 < ROWS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column, row+1));
                 break;
             case LEFT:
                 obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                wallGraph.removeEdge(Pair.of(column, row), Pair.of(column,row+1));
                 wallGraph.addEdge(Tile.of(column, row), Tile.of(column,row+1));
+
+                if(column-1 >= 0) tileGraph.removeEdge(Tile.of(column-1, row), Tile.of(column, row));
                 break;
             case RIGHT:
                 obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
 //                wallGraph.removeEdge(Pair.of(column+1, row), Pair.of(column+1,row+1));
                 wallGraph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
+
+                if(column+1 < COLS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column+1, row));
                 break;
         }
         walls.add(obj);
@@ -174,11 +181,59 @@ public class GameGrid {
         setRoomGroundTile();
 
         System.out.println("Room Count: " + rooms.size());
-//        printGraph();
+        printGraph(tileGraph);
+        printGraph(wallGraph);
     }
 
     private void setRoomGroundTile() {
         for(Room r : rooms) {
+            System.out.println("Room: " + r);
+            boolean draw = true;
+            for(Tile t : r.getTiles()) {
+                // upper left corner
+                if (t.getRow() == 0 && t.getColumn() == 0 && !(
+                    wallGraph.containsEdge(t, Tile.of(t.getColumn() +1, t.getRow())) &&
+                    wallGraph.containsEdge(t, Tile.of(t.getColumn(), t.getRow() +1 )))) {
+                        draw = false;
+                        break;
+                }
+
+                // Top Side
+                if (t.getRow() == 0 && !wallGraph.containsEdge(t, Tile.of(t.getColumn() +1 , t.getRow()))) {
+                    draw = false;
+                    break;
+                }
+
+                // Left Side
+                if (t.getColumn() == 0 && !wallGraph.containsEdge(t, Tile.of(t.getColumn(), t.getRow()+1))) {
+                    draw = false;
+                    break;
+                }
+
+                // Bottom Right corner
+                if (t.getColumn() == COLS-1 && t.getRow() == ROWS-1 && !(
+                    wallGraph.containsEdge(Tile.of(t.getColumn()-1, t.getRow()), t) &&
+                    wallGraph.containsEdge(Tile.of(t.getColumn(), t.getRow()-1), t))) {
+                    draw = false;
+                    break;
+                }
+
+                // Right Side
+                if (t.getRow() == ROWS-1 && !wallGraph.containsEdge(Tile.of(t.getColumn() +1, t.getRow()), t)) {
+                    draw = false;
+                    break;
+                }
+
+                // Bottom Side
+                if (t.getColumn() == COLS-1 && !wallGraph.containsEdge(Tile.of(t.getColumn(), t.getRow()+1), t)) {
+                    draw = false;
+                    break;
+                }
+
+            }
+
+            if(!draw) continue;
+
             for (Tile t : r.getTiles()) {
                 setGroundTile(FloorType.WOOD, t.getColumn(), t.getRow());
             }
@@ -194,36 +249,46 @@ public class GameGrid {
     }
 
     private List<Room> calculateRooms() {
-        Set<List<SimpleEdge>> cycles = CycleDetection.calculate(wallGraph);
+        ConnectivityInspector<Tile, SimpleEdge> ci = new ConnectivityInspector<>(tileGraph);
+        List<Set<Tile>> rooms = ci.connectedSets();
 
         List<Room> roomList = new ArrayList<>();
-        // simple approx, is accurate for rectangular rooms
-        for(List<SimpleEdge> cycle : cycles) {
-            System.out.println("Edge List" + cycle);
-            int maxTop = ROWS;
-            int maxLeft = COLS;
-            int maxRight = 0;
-            int maxBottom = 0;
-            for(SimpleEdge se : cycle) {
-                if(se.getSource().getRow() < maxTop ) maxTop = se.getSource().getRow();
-                if(se.getSource().getColumn() < maxLeft) maxLeft = se.getSource().getColumn();
-                if(se.getTarget().getRow() > maxBottom) maxBottom = se.getTarget().getRow();
-                if(se.getTarget().getColumn() > maxRight) maxRight = se.getTarget().getColumn();
-            }
+        for(Set<Tile> room : rooms) {
+            if(room.size() <= 1) continue;
+            Room r = new Room();
+            r.addAllTiles(room);
 
-            Room room = new Room();
-            for(int r = maxTop; r < maxBottom; r++) {
-                for(int c = maxLeft; c < maxRight; c++) {
-                    room.addTile(Tile.of(c, r));
-                }
-            }
-            roomList.add(room);
+            roomList.add(r);
         }
 
-        // complex bfs-based room detection
-
-
         return roomList;
+
+
+//        Set<List<SimpleEdge>> cycles = CycleDetection.calculate(wallGraph);
+//        List<Room> roomList = new ArrayList<>();
+//        // simple approx, is accurate for rectangular rooms
+//        for(List<SimpleEdge> cycle : cycles) {
+//            System.out.println("Edge List" + cycle);
+//            int maxTop = ROWS;
+//            int maxLeft = COLS;
+//            int maxRight = 0;
+//            int maxBottom = 0;
+//            for(SimpleEdge se : cycle) {
+//                if(se.getSource().getRow() < maxTop ) maxTop = se.getSource().getRow();
+//                if(se.getSource().getColumn() < maxLeft) maxLeft = se.getSource().getColumn();
+//                if(se.getTarget().getRow() > maxBottom) maxBottom = se.getTarget().getRow();
+//                if(se.getTarget().getColumn() > maxRight) maxRight = se.getTarget().getColumn();
+//            }
+//
+//            Room room = new Room();
+//            for(int r = maxTop; r < maxBottom; r++) {
+//                for(int c = maxLeft; c < maxRight; c++) {
+//                    room.addTile(Tile.of(c, r));
+//                }
+//            }
+//            roomList.add(room);
+//        }
+//        return roomList;
     }
 
     public void printGraph(Graph g) {
