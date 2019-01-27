@@ -15,7 +15,7 @@ public enum RoomTypes {
     BED_ROOM(Shelf, Wardrobe, Curtains, PrayerCarpet, BookShelf, Picture, Bed, Bedside, Cabinet),
     HALLWAY(Shelf, Bench, BookShelf, Picture, Cabinet),
     OUTDOOR(Bench),
-    OFFICE(Shelf, Desk, Curtains, BookShelf, Picture, Cabinet);
+    OFFICE(Shelf, Desk, PlainDesk, Curtains, BookShelf, Picture, Cabinet);
 
     Set<AssetType> validAssetTypes;
 

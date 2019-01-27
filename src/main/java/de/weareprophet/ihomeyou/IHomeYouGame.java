@@ -244,7 +244,7 @@ public class IHomeYouGame extends Game {
 
     private void applyRoomPerk(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount, NeedsType cleanliness) {
         for (final FurnitureObject assetInRoom : assetsInRoom) {
-            fulfilment.add(cleanliness, assetInRoom.getType().getNeedsFulfillment().getNeeds().get(cleanliness) * (roomSize - assetCount) / 30);
+            fulfilment.add(cleanliness, assetInRoom.getType().getNeedsFulfillment().getNeeds().getOrDefault(cleanliness, 0) * (roomSize - assetCount) / 30);
         }
     }
 
@@ -293,7 +293,7 @@ public class IHomeYouGame extends Game {
 
     private void placeWall(WallType wallType, GameGrid.WallDirection wallDirection) {
         if (gameState == GameState.InLevel && player.canPay(wallType.getPrice())
-                && grid.setWall(player.getRow(), player.getColumn(), wallType, wallDirection)) {
+                && grid.setWall(player.getRow(), player.getColumn(), wallType.getResource(wallDirection), wallDirection)) {
             player.pay(wallType.getPrice());
         } else {
             player.signalMistake(ES);
