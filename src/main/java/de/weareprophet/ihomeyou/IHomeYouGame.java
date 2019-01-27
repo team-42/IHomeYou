@@ -33,6 +33,7 @@ public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
     private static final int MAX_DIFFICULTY = 400;
     private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
+    private WallSelector wallSelector;
 
     private enum GameState {
         InLevel,
@@ -71,7 +72,7 @@ public class IHomeYouGame extends Game {
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
-        new WallSelector(this);
+        wallSelector = new WallSelector(this);
         addObject(new SimpleText("Current customer information", getXOfRightColumn(), 80));
         addObject(new SimpleText("Number of people: ", getXOfRightColumn(), 110));
         customerNumberOfPpl = new SimpleText("", getXOfRightColumn() + 170, 110);
@@ -80,7 +81,7 @@ public class IHomeYouGame extends Game {
         satisfactionOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter to evaluate", getXOfRightColumn(), 360);
         addObject(satisfactionOutput);
         prestigeOutput = new SimpleText(ColorResource.GREEN, "", getXOfRightColumn() + 50, 360);
-        nextLevelOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter for next customer", getXOfRightColumn(), 380);
+        nextLevelOutput = new SimpleText(ColorResource.RED, "Press Enter for next customer", getXOfRightColumn(), 380);
         addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 60));
         addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 400));
 
@@ -97,10 +98,10 @@ public class IHomeYouGame extends Game {
                         player.signalMistake(ES);
                     }
                 });
-        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.TOP));
-        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.LEFT));
-        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.BOTTOM));
-        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.RIGHT));
+        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.TOP));
+        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.LEFT));
+        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.BOTTOM));
+        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.RIGHT));
         addKeyPressedEvent(KeyCode.U.getCode(), event -> {
             final AssetType selectedAsset = assetSelector.getSelected();
             if (!assetSelector.isSelectedAvailable() && player.getSkillPoints() >= selectedAsset.getSkillPoints()) {
@@ -291,8 +292,9 @@ public class IHomeYouGame extends Game {
     }
 
     private void placeWall(WallType wallType, GameGrid.WallDirection wallDirection) {
-        if (gameState == GameState.InLevel) {
-            grid.setWall(player.getRow(), player.getColumn(), wallType.getResource(wallDirection), wallDirection);
+        if (gameState == GameState.InLevel && player.canPay(wallType.getPrice())
+                && grid.setWall(player.getRow(), player.getColumn(), wallType, wallDirection)) {
+            player.pay(wallType.getPrice());
         } else {
             player.signalMistake(ES);
         }
