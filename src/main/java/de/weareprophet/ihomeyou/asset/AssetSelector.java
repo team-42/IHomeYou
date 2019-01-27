@@ -32,8 +32,10 @@ public class AssetSelector {
             }
         }
         imgObj = new ImageObject(getSelected().getLargeResource());
-        imgObj.setX(game.getXOfRightColumn());
+        imgObj.setX(game.getXOfRightColumn() + 60);
         imgObj.setY(Y_OFFSET + 30);
+        game.addObject(new SimpleText("[Q] <", game.getXOfRightColumn(), Y_OFFSET + 90));
+        game.addObject(new SimpleText("> [E]", game.getXOfRightColumn() + 200, Y_OFFSET + 90));
         game.addObject(imgObj);
         selectedName = new SimpleText(getSelected().getName(), game.getXOfRightColumn() + 150, Y_OFFSET);
         game.addObject(selectedName);
@@ -62,7 +64,7 @@ public class AssetSelector {
         selectedDesc.setText(getSelected().getDescription());
         price.setText(String.valueOf(getSelected().getPrice()));
         if (isSelectedAvailable()) {
-            availability.setText("Item is available");
+            availability.setText("Item available! [Space] to place");
             availability.setColor(ColorResource.GREEN);
         } else {
             availability.setText("Required skill to [U]nlock: " + getSelected().getSkillPoints());

@@ -43,9 +43,6 @@ public class Customer {
         overallNeeds += intensity;
         needs.add(NeedsType.Space, intensity);
 
-        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
-        overallNeeds += intensity;
-        needs.add(NeedsType.Food, intensity);
 
         intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
         overallNeeds += intensity;
@@ -55,6 +52,11 @@ public class Customer {
         overallNeeds += intensity;
         needs.add(NeedsType.Storage, intensity);
 
+        intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
+        overallNeeds += intensity;
+        needs.add(NeedsType.Cleanliness, intensity);
+
+
         if (maxDifficulty > 60) {
             intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
@@ -62,7 +64,7 @@ public class Customer {
 
             intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
-            needs.add(NeedsType.Comfort, intensity);
+            needs.add(NeedsType.Food, intensity);
 
             intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
@@ -76,7 +78,7 @@ public class Customer {
 
             intensity = (maxDifficulty / 2) + r.nextInt(maxDifficulty / 2);
             overallNeeds += intensity;
-            needs.add(NeedsType.Cleanliness, intensity);
+            needs.add(NeedsType.Comfort, intensity);
         }
 
         if (maxDifficulty > 120) {
@@ -86,7 +88,8 @@ public class Customer {
         }
 
         int numberOfPpl = Math.min(6, 1 + (overallNeeds / 200));
-        return new Customer(numberOfPpl, overallNeeds * 2, numberOfPpl, needs
+        int prestige = 1 + (maxDifficulty / 70);
+        return new Customer(numberOfPpl, overallNeeds * 2, prestige, needs
                 .build());
     }
 

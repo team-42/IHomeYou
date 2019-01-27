@@ -7,7 +7,6 @@ import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.util.shape.FRectangle;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +14,6 @@ class Player {
 
     private final ShapeObject shape;
     private final SimpleText budgetDisplay;
-    private final ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
     private final SimpleText skillDisplay;
     private int row = 0;
     private int column = 0;
@@ -84,7 +82,7 @@ class Player {
         }
     }
 
-    void signalMistake() {
+    void signalMistake(ScheduledExecutorService es) {
         shape.setColor(ColorResource.RED);
         es.schedule(() -> shape.setColor(ColorResource.DARK_GRAY), 400, TimeUnit.MILLISECONDS);
     }

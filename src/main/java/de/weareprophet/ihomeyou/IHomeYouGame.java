@@ -2,6 +2,7 @@ package de.weareprophet.ihomeyou;
 
 import de.weareprophet.ihomeyou.asset.AssetSelector;
 import de.weareprophet.ihomeyou.asset.AssetType;
+import de.weareprophet.ihomeyou.asset.WallSelector;
 import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
@@ -15,12 +16,13 @@ import org.apache.logging.log4j.Logger;
 import org.frice.Game;
 import org.frice.obj.button.SimpleText;
 import org.frice.resource.graphics.ColorResource;
-import org.frice.resource.image.ImageResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 
 import static org.frice.Initializer.launch;
@@ -28,6 +30,7 @@ import static org.frice.Initializer.launch;
 public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
     private static final int MAX_DIFFICULTY = 200;
+    private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
 
     private enum GameState {
         InLevel,
@@ -66,6 +69,7 @@ public class IHomeYouGame extends Game {
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
+        new WallSelector(this);
         addObject(new SimpleText("Current customer information", getXOfRightColumn(), 80));
         addObject(new SimpleText("Number of people: ", getXOfRightColumn(), 110));
         customerNumberOfPpl = new SimpleText("", getXOfRightColumn() + 170, 110);
@@ -80,25 +84,27 @@ public class IHomeYouGame extends Game {
                 event -> {
                     final AssetType selectedAsset = assetSelector.getSelected();
                     LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
-                    if (assetSelector.isSelectedAvailable() && player.canPay(selectedAsset.getPrice()) && grid.setFurniture(
+                    if (gameState == GameState.InLevel && assetSelector.isSelectedAvailable() && player.canPay(selectedAsset.getPrice()) && grid.setFurniture(
                             player.getRow(),
                             player.getColumn(),
                             selectedAsset)) {
                         player.pay(selectedAsset.getPrice());
                     } else {
-                        player.signalMistake();
+                        player.signalMistake(ES);
                     }
                 });
-        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP));
-        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT));
-        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM));
-        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.RIGHT));
+        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.TOP));
+        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.LEFT));
+        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.BOTTOM));
+        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(WallType.Wall, GameGrid.WallDirection.RIGHT));
         addKeyPressedEvent(KeyCode.U.getCode(), event -> {
             final AssetType selectedAsset = assetSelector.getSelected();
             if (!assetSelector.isSelectedAvailable() && player.getSkillPoints() >= selectedAsset.getSkillPoints()) {
                 player.spendSkillPoints(selectedAsset.getSkillPoints());
                 assetSelector.unlock(selectedAsset);
                 LOG.debug("Unlocked asset: {}", selectedAsset.getName());
+            } else {
+                player.signalMistake(ES);
             }
         });
         addKeyReleasedEvent(KeyCode.ENTER.getCode(), getEvaluationListener());
@@ -126,8 +132,8 @@ public class IHomeYouGame extends Game {
                 satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
                 addObject(nextLevelOutput);
                 final ColorResource color;
-                if(difficulty == MAX_DIFFICULTY){
-                    gameState =GameState.Victory;
+                if (difficulty == MAX_DIFFICULTY) {
+                    gameState = GameState.Victory;
                     nextLevelOutput.setColor(ColorResource.GREEN);
                     player.kill();
                     Arrays.stream(getKeyListeners()).forEach(this::removeKeyListener);
@@ -249,8 +255,12 @@ public class IHomeYouGame extends Game {
         }
     }
 
-    private void placeWall(ImageResource wallType, GameGrid.WallDirection wallDirection) {
-        grid.setWall(player.getRow(), player.getColumn(), wallType, wallDirection);
+    private void placeWall(WallType wallType, GameGrid.WallDirection wallDirection) {
+        if (gameState == GameState.InLevel) {
+            grid.setWall(player.getRow(), player.getColumn(), wallType.getResource(wallDirection), wallDirection);
+        } else {
+            player.signalMistake(ES);
+        }
     }
 
     @Override
