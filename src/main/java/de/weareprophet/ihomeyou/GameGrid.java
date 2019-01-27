@@ -10,7 +10,6 @@ import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
 import org.frice.util.shape.FRectangle;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
@@ -21,8 +20,9 @@ import org.jgrapht.io.GraphExporter;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 
 public class GameGrid {
@@ -47,6 +47,10 @@ public class GameGrid {
 
         graph = initNoWallGraph();
 //        printWallGraph();
+    }
+
+    public Collection<AssetType> getAssetsInGrid() {
+        return gameGrid.values();
     }
 
     private Graph<Pair<Integer, Integer>, DefaultEdge> initNoWallGraph() {
