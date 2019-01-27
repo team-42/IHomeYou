@@ -5,6 +5,7 @@ import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
+import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.customer.NeedsType;
 import de.weareprophet.ihomeyou.datastructure.Room;
 import de.weareprophet.ihomeyou.datastructure.RoomTypes;
@@ -61,7 +62,7 @@ public class IHomeYouGame extends Game {
                 event -> {
                     final AssetType selectedAsset = assetSelector.getSelected();
                     LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
-                    if (assetSelector.isSelectedAvailable() && player.canPay(selectedAsset.getPrice()) && grid.setObject(
+                    if (assetSelector.isSelectedAvailable() && player.canPay(selectedAsset.getPrice()) && grid.setFurniture(
                             player.getRow(),
                             player.getColumn(),
                             selectedAsset)) {
@@ -73,8 +74,8 @@ public class IHomeYouGame extends Game {
         addKeyReleasedEvent(KeyCode.ENTER.getCode(),
                 event -> {
                     final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
-                    for (final AssetType asset : grid.getAssetsInGrid()) {
-                        fulfilment.add(asset.getNeedsFulfillment());
+                    for (final FurnitureObject asset : grid.getAssetsInGrid()) {
+                        fulfilment.add(asset.getType().getNeedsFulfillment());
                     }
                     fulfilment.add(NeedsType.Space, calculateSpaceFulfilment());
                     double satisfaction = customer.measureSatisfaction(fulfilment.build());

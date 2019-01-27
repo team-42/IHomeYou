@@ -1,7 +1,6 @@
 package de.weareprophet.ihomeyou.datastructure;
 
 import com.google.common.collect.Table;
-import de.weareprophet.ihomeyou.asset.AssetType;
 
 import java.util.*;
 
@@ -16,8 +15,8 @@ public class Room {
         return roomTiles;
     }
 
-    public List<AssetType> getRoomInventory(Table<Integer, Integer, AssetType> gameGrid) {
-        List<AssetType> inventory = new ArrayList<>();
+    public List<FurnitureObject> getRoomInventory(Table<Integer, Integer, FurnitureObject> gameGrid) {
+        List<FurnitureObject> inventory = new ArrayList<>();
 
         for(Tile t : roomTiles) {
             if(gameGrid.contains(t.getRow(), t.getColumn())) {

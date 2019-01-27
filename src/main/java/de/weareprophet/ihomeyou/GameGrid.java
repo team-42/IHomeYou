@@ -4,14 +4,13 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.algorithm.CycleDetection;
 import de.weareprophet.ihomeyou.asset.AssetType;
+import de.weareprophet.ihomeyou.asset.FloorType;
+import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.datastructure.Room;
 import de.weareprophet.ihomeyou.datastructure.SimpleEdge;
 import de.weareprophet.ihomeyou.datastructure.Tile;
 import org.frice.obj.sub.ImageObject;
-import org.frice.obj.sub.ShapeObject;
-import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
-import org.frice.util.shape.FRectangle;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.io.ComponentNameProvider;
@@ -25,7 +24,9 @@ import java.util.*;
 
 
 public class GameGrid {
-    private Table<Integer, Integer, AssetType> gameGrid;
+    private Table<Integer, Integer, FurnitureObject> gameGrid;
+    private Table<Integer, Integer, ImageObject> gameGridGroundTile;
+    private List<ImageObject> walls;
     private IHomeYouGame ihyg;
     private Graph<Tile, SimpleEdge> graph;
 
@@ -37,22 +38,40 @@ public class GameGrid {
 
     GameGrid(IHomeYouGame iHomeYouGame) {
         gameGrid = HashBasedTable.create();
+        walls = new ArrayList<>();
         ihyg = iHomeYouGame;
 
-        ShapeObject gameGrid = new ShapeObject(ColorResource.LIGHT_GRAY, new FRectangle(COLS * SIZE, ROWS * SIZE));
-        gameGrid.setX(BORDERS);
-        gameGrid.setY(BORDERS);
-        ihyg.addObject(gameGrid);
-
+        initGameGridGroundTiles();
         graph = initNoWallGraph();
-//        printWallGraph();
     }
 
-    public Collection<AssetType> getAssetsInGrid() {
+    public void resetGameGrid() {
+        gameGridGroundTile.values().forEach(ihyg::removeObject);
+        gameGrid.values().forEach(fo -> ihyg.removeObject(fo.getObj()));
+        walls.forEach(ihyg::removeObject);
+
+        gameGrid = HashBasedTable.create();
+        gameGridGroundTile = HashBasedTable.create();
+        walls = new ArrayList<>();
+    }
+
+    private void initGameGridGroundTiles() {
+        gameGridGroundTile = HashBasedTable.create();
+        for(int c = 0; c < COLS; c++) {
+            for(int r = 0; r < ROWS; r++) {
+                ImageObject initialGrass = new ImageObject(FloorType.GRASS.getResource(), c * SIZE + BORDERS, r * SIZE + BORDERS);
+                gameGridGroundTile.put(r, c, initialGrass);
+                ihyg.addObject(initialGrass);
+            }
+        }
+    }
+
+
+    public Collection<FurnitureObject> getAssetsInGrid() {
         return gameGrid.values();
     }
 
-    public Collection<AssetType> getAssetsInRoom(Room room) {
+    public Collection<FurnitureObject> getAssetsInRoom(Room room) {
         return room.getRoomInventory(gameGrid);
     }
 
@@ -65,26 +84,13 @@ public class GameGrid {
                 graph.addVertex(Tile.of(c, r));
             }
         }
-//
-//        // add edges
-//        for(int c = 0; c <= COLS+1; c++) {
-//            for (int r = 0; r <= ROWS+1; r++) {
-//                if(c+1 <= COLS+1) {
-//                    graph.addEdge(Pair.of(c, r), Pair.of(c+1, r));
-//                }
-//
-//                if(r+1 <= ROWS+1) {
-//                    graph.addEdge(Pair.of(c, r), Pair.of(c, r+1));
-//                }
-//            }
-//        }
         return graph;
     }
 
-    public boolean setObject(int row, int column, AssetType at) {
+    public boolean setFurniture(int row, int column, AssetType at) {
         if(!gameGrid.contains(row, column)) {
             ImageObject obj = new ImageObject(at.getResource(), SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
-            gameGrid.put(row, column, at);
+            gameGrid.put(row, column, FurnitureObject.of(at, obj));
             ihyg.addObject(obj);
             return true;
         }
@@ -116,6 +122,7 @@ public class GameGrid {
                 graph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
                 break;
         }
+        walls.add(obj);
         ihyg.addObject(obj);
         List<Room> sets = calculateRooms();
         System.out.println("Room Count: " + sets.size());
