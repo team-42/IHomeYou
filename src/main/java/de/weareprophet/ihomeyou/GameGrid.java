@@ -5,13 +5,14 @@ import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.FloorType;
 import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
-import de.weareprophet.ihomeyou.datastructure.Room;
+import de.weareprophet.ihomeyou.datastructure.GroundTileHandler;
+import de.weareprophet.ihomeyou.datastructure.room.Room;
 import de.weareprophet.ihomeyou.datastructure.SimpleEdge;
 import de.weareprophet.ihomeyou.datastructure.Tile;
+import de.weareprophet.ihomeyou.datastructure.room.RoomManager;
 import org.frice.obj.sub.ImageObject;
 import org.frice.resource.image.ImageResource;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.io.ComponentNameProvider;
 import org.jgrapht.io.DOTExporter;
@@ -24,26 +25,29 @@ import java.util.*;
 
 
 public class GameGrid {
-    private List<Room> rooms;
-
+    private RoomManager roomManager;
+    private GroundTileHandler gth;
     private Table<Integer, Integer, FurnitureObject> gameGrid;
-    private Table<Integer, Integer, ImageObject> gameGridGroundTile;
     private List<ImageObject> walls;
     private IHomeYouGame ihyg;
     private Graph<Tile, SimpleEdge> wallGraph;
     private Graph<Tile, SimpleEdge> tileGraph;
 
 
-    static final int SIZE = 64;
-    static final int BORDERS = 10;
+    public static final int SIZE = 64;
+    public static final int BORDERS = 10;
 
-    static final int COLS = 16;
-    static final int ROWS = 10;
+    public static final int COLS = 16;
+    public static final int ROWS = 10;
 
     GameGrid(IHomeYouGame iHomeYouGame) {
+        gth = new GroundTileHandler(iHomeYouGame);
         ihyg = iHomeYouGame;
-        gameGridGroundTile = HashBasedTable.create();
         init();
+    }
+
+    public RoomManager getRoomManager() {
+        return roomManager;
     }
 
     public void resetGameGrid() {
@@ -57,31 +61,13 @@ public class GameGrid {
     public void init() {
         gameGrid = HashBasedTable.create();
         walls = new ArrayList<>();
-        rooms = new ArrayList<>();
         wallGraph = null;
         tileGraph = null;
+        roomManager = new RoomManager();
+        gth.reset();
 
-        initGameGridGroundTiles();
         wallGraph = initWallGraph();
         tileGraph = initTileGraph();
-    }
-
-    private void initGameGridGroundTiles() {
-        for(int c = 0; c < COLS; c++) {
-            for(int r = 0; r < ROWS; r++) {
-                setGroundTile(FloorType.GRASS, c, r);
-            }
-        }
-    }
-
-    private void setGroundTile(FloorType floorType, int column, int row) {
-        if(gameGridGroundTile.contains(row, column)) {
-            gameGridGroundTile.get(row, column).setRes(floorType.getResource());
-        } else {
-            ImageObject tileImage = new ImageObject(floorType.getResource(), column * SIZE + BORDERS, row * SIZE + BORDERS);
-            gameGridGroundTile.put(row, column, tileImage);
-            ihyg.addObject(tileImage);
-        }
     }
 
 
@@ -179,44 +165,15 @@ public class GameGrid {
         walls.add(obj);
         ihyg.addObject(obj);
 
-        rooms = calculateRooms();
-        setRoomGroundTile();
+        roomManager.calculateRooms(tileGraph);
+        roomManager.setRoomGroundTile(gth, wallGraph);
 
-        System.out.println("Room Count: " + rooms.size());
 //        printGraph(tileGraph);
 //        printGraph(wallGraph);
     }
 
-    private void setRoomGroundTile() {
-        for(Room r : rooms) {
-            for (Tile t : r.getTiles()) {
-                setGroundTile(FloorType.WOOD, t.getColumn(), t.getRow());
-            }
-        }
-    }
-
-    public List<Room> getRooms() {
-        return rooms;
-    }
-
     public enum WallDirection {
         TOP, BOTTOM, LEFT, RIGHT
-    }
-
-    private List<Room> calculateRooms() {
-        ConnectivityInspector<Tile, SimpleEdge> ci = new ConnectivityInspector<>(tileGraph);
-        List<Set<Tile>> rooms = ci.connectedSets();
-
-        List<Room> roomList = new ArrayList<>();
-        for(Set<Tile> room : rooms) {
-            if(room.size() <= 1) continue;
-            Room r = new Room();
-            r.addAllTiles(room);
-
-            roomList.add(r);
-        }
-
-        return roomList;
     }
 
     private void printGraph(Graph<Tile, SimpleEdge> g) {

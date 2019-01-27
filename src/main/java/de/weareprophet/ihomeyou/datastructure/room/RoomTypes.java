@@ -1,4 +1,4 @@
-package de.weareprophet.ihomeyou.datastructure;
+package de.weareprophet.ihomeyou.datastructure.room;
 
 import de.weareprophet.ihomeyou.asset.AssetType;
 

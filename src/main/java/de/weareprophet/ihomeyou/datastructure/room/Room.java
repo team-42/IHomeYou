@@ -1,6 +1,8 @@
-package de.weareprophet.ihomeyou.datastructure;
+package de.weareprophet.ihomeyou.datastructure.room;
 
 import com.google.common.collect.Table;
+import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
+import de.weareprophet.ihomeyou.datastructure.Tile;
 
 import java.util.*;
 

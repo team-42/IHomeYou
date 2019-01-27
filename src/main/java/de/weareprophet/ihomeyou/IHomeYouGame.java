@@ -8,8 +8,8 @@ import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import de.weareprophet.ihomeyou.customer.NeedsType;
 import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
-import de.weareprophet.ihomeyou.datastructure.Room;
-import de.weareprophet.ihomeyou.datastructure.RoomTypes;
+import de.weareprophet.ihomeyou.datastructure.room.Room;
+import de.weareprophet.ihomeyou.datastructure.room.RoomTypes;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -181,7 +181,7 @@ public class IHomeYouGame extends Game {
 
     private int calculateSpaceFulfilment() {
         int spaceValue = 0;
-        List<Room> rooms = grid.getRooms();
+        List<Room> rooms = grid.getRoomManager().getRooms();
         for (final Room r : rooms) {
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
             int roomSize = r.getTiles().size();
