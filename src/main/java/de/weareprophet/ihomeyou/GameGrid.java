@@ -120,6 +120,7 @@ public class GameGrid {
         if(!gameGrid.contains(row, column)) {
             ImageObject obj = new ImageObject(at.getResource(), SIZE * column + BORDERS + 8, SIZE * row + BORDERS + 8);
             gameGrid.put(row, column, FurnitureObject.of(at, obj));
+            roomManager.executeTileChange(gameGrid, gth);
             ihyg.addObject(obj);
             return true;
         }
