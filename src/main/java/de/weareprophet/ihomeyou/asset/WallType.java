@@ -6,9 +6,9 @@ import org.frice.resource.image.ImageResource;
 import java.net.URL;
 
 public enum WallType {
-    Solid("Wall","WallHorizontal", "WallVertical", 5),
-    Door("Door","wall_horizontal_stone_door", "wall_vertical_stone_door", 20),
-    Window("Window","wall_horizontal_stone_window", "wall_vertical_stone_window", 10);
+    Solid("Wall", "WallHorizontal", "WallVertical", 3),
+    Door("Door", "wall_horizontal_stone_door", "wall_vertical_stone_door", 20),
+    Window("Window", "wall_horizontal_stone_window", "wall_vertical_stone_window", 10);
 
     private final String label;
     private final String horizontalImage;

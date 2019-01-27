@@ -68,7 +68,7 @@ public class IHomeYouGame extends Game {
         setTitle("I Home You!");
         grid = new GameGrid(this);
         player = new Player(this);
-        difficulty = 80;
+        difficulty = 70;
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
@@ -127,11 +127,9 @@ public class IHomeYouGame extends Game {
     private Consumer<KeyEvent> getEvaluationListener() {
         return event -> {
             if (gameState == GameState.InLevel) {
+                grid.calculateRoomAccessibility();
                 final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
-                for (final FurnitureObject asset : grid.getAssetsInGrid()) {
-                    fulfilment.add(asset.getType().getNeedsFulfillment());
-                }
-                calculateSpaceFulfilment(fulfilment);
+                calculateRoomFulfilment(fulfilment);
                 double satisfaction = currentCustomer.measureSatisfaction(fulfilment.build());
                 LOG.info("Customer satisfaction: {}", satisfaction);
                 satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
@@ -180,64 +178,80 @@ public class IHomeYouGame extends Game {
         };
     }
 
-    private void calculateSpaceFulfilment(NeedsFulfillment.Builder fulfilment) {
+    private void calculateRoomFulfilment(NeedsFulfillment.Builder fulfilment) {
         List<Room> rooms = grid.getRoomManager().getRooms();
         for (int i = 1; i < rooms.size(); i++) { // skip the first element bc that's the outside
             final Room r = rooms.get(i);
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
+            final Map<WallType, Integer> wallCount = new EnumMap<>(WallType.class);
+            for (final WallType w : WallType.values()) {
+                wallCount.put(w, grid.getNumWallTypeInRoom(w, r));
+            }
             int roomSize = r.getTiles().size();
             int assetCount = assetsInRoom.size();
-            LOG.debug("Room with {} tiles and {} assets", roomSize, assetCount);
+            LOG.debug("Room with {} tiles, {} assets, accessibility {} and walls: {}", roomSize, assetCount, r.isAccessible(), wallCount);
+            if (!r.isAccessible()) {
+                continue; // ignore inaccessible rooms
+            }
+            for (final FurnitureObject furniture : assetsInRoom) {
+                fulfilment.add(furniture.getType().getNeedsFulfillment());
+            }
+            rewardRoomConsistency(fulfilment, assetsInRoom, roomSize, assetCount);
+            int roomComfort = Math.max(0, wallCount.get(WallType.Solid) * WallType.Solid.getPrice() + wallCount.get(WallType.Window) * WallType.Window.getPrice() - roomSize - wallCount.get(WallType.Door) * 4);
+            LOG.debug("Room comfort: {}", roomComfort);
+            fulfilment.add(NeedsType.Comfort, roomComfort);
+        }
+    }
 
-            final Map<RoomTypes, Integer> typeCount = new EnumMap<>(RoomTypes.class);
-            RoomTypes bestType = RoomTypes.HALLWAY;
-            int bestCount = 0;
-            for (final RoomTypes roomType : RoomTypes.values()) {
-                int validAssetCount = 0;
-                for (final FurnitureObject asset : assetsInRoom) {
-                    if (roomType.validRoomAsset(asset.getType())) {
-                        validAssetCount++;
-                    }
-                }
-                typeCount.put(roomType, validAssetCount);
-                if (validAssetCount > bestCount) {
-                    bestType = roomType;
-                    bestCount = validAssetCount;
+    private void rewardRoomConsistency(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount) {
+        final Map<RoomTypes, Integer> typeCount = new EnumMap<>(RoomTypes.class);
+        RoomTypes bestType = RoomTypes.HALLWAY;
+        int bestCount = 0;
+        for (final RoomTypes roomType : RoomTypes.values()) {
+            int validAssetCount = 0;
+            for (final FurnitureObject asset : assetsInRoom) {
+                if (roomType.validRoomAsset(asset.getType())) {
+                    validAssetCount++;
                 }
             }
-
-            boolean roomConsistency = true;
-            for (final RoomTypes roomType : RoomTypes.values()) {
-                if (roomType == bestType) {
-                    continue;
-                }
-                if (typeCount.get(roomType) > bestCount) {
-                    roomConsistency = false;
-                }
+            typeCount.put(roomType, validAssetCount);
+            if (validAssetCount > bestCount) {
+                bestType = roomType;
+                bestCount = validAssetCount;
             }
-            LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
-            if (roomConsistency) {
-                switch (bestType) {
-                    case BATH:
-                        applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Cleanliness);
-                        break;
-                    case OFFICE:
-                        applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Work);
-                        break;
-                    case KITCHEN:
-                        applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Food);
-                        break;
-                    case LIVING_ROOM:
-                        applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Comfort);
-                        break;
-                    case BED_ROOM:
-                        applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Personal);
-                        break;
-                    case HALLWAY:
-                        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
-                        break;
-                    default:
-                }
+        }
+
+        boolean roomConsistency = true;
+        for (final RoomTypes roomType : RoomTypes.values()) {
+            if (roomType == bestType) {
+                continue;
+            }
+            if (typeCount.get(roomType) > bestCount) {
+                roomConsistency = false;
+            }
+        }
+        LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
+        if (roomConsistency) {
+            switch (bestType) {
+                case BATH:
+                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Cleanliness);
+                    break;
+                case OFFICE:
+                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Work);
+                    break;
+                case KITCHEN:
+                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Food);
+                    break;
+                case LIVING_ROOM:
+                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Comfort);
+                    break;
+                case BED_ROOM:
+                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Personal);
+                    break;
+                case HALLWAY:
+                    fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
+                    break;
+                default:
             }
         }
     }
