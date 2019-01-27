@@ -44,6 +44,7 @@ public class AssetSelector {
         game.addObject(price);
         availability = new SimpleText("", game.getXOfRightColumn(), Y_OFFSET + 220);
         game.addObject(availability);
+        game.addObject(new SimpleText(ColorResource.BLACK, "Selected object:", game.getXOfRightColumn(), Y_OFFSET));
         updateSelectedInfo();
         game.addKeyPressedEvent(KeyCode.Q.getCode(), keyEvent -> {
             selected = (selected - 1 + assets.size()) % assets.size();
@@ -53,7 +54,6 @@ public class AssetSelector {
             selected = (selected + 1) % assets.size();
             updateSelectedInfo();
         });
-        game.addObject(new SimpleText(ColorResource.BLACK, "Selected object:", game.getXOfRightColumn(), Y_OFFSET));
     }
 
     private void updateSelectedInfo() {
@@ -77,5 +77,10 @@ public class AssetSelector {
 
     public boolean isSelectedAvailable() {
         return availableAssets.contains(getSelected());
+    }
+
+    public void unlock(final AssetType toUnlock) {
+        availableAssets.add(toUnlock);
+        updateSelectedInfo();
     }
 }

@@ -63,6 +63,14 @@ public class IHomeYouGame extends Game {
         addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT));
         addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM));
         addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.RIGHT));
+        addKeyPressedEvent(KeyCode.U.getCode(), event -> {
+            final AssetType selectedAsset = assetSelector.getSelected();
+            if (!assetSelector.isSelectedAvailable() && player.getSkillPoints() >= selectedAsset.getSkillPoints()) {
+                player.spendSkillPoints(selectedAsset.getSkillPoints());
+                assetSelector.unlock(selectedAsset);
+                LOG.debug("Unlocked asset: {}", selectedAsset.getName());
+            }
+        });
     }
 
     private void placeWall(ImageResource wallType, GameGrid.WallDirection wallDirection) {

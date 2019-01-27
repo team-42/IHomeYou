@@ -1,6 +1,11 @@
 package de.weareprophet.ihomeyou.customer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Customer {
+
+    private static final Logger LOG = LogManager.getLogger(Customer.class);
 
     private final NeedsFulfillment desire;
 
@@ -28,12 +33,17 @@ public class Customer {
 
         for (final NeedsType t : NeedsType.values()) {
             final Integer customerDesireForType = this.desire.getNeeds().getOrDefault(t, 0);
+            final double satisfactionForType;
+            final double fulfilmentForType = fulfillment.getNeeds().getOrDefault(t, 0).doubleValue();
             if (customerDesireForType > 0) {
-                satisfaction += (fulfillment.getNeeds().getOrDefault(t, 0).doubleValue() / customerDesireForType.doubleValue()) - 1;
+                satisfactionForType = Math.min(2.0, (fulfilmentForType * 3.0 / customerDesireForType.doubleValue()) - 2.0);
             } else {
-                satisfaction += fulfillment.getNeeds().getOrDefault(t, 0).doubleValue() / 1000;
+                satisfactionForType = Math.min(2.0, fulfilmentForType / 200.0) / 2.0;
             }
+            LOG.debug("Need for type {} is {}. Delivered have been {}. Resulting score is {}.", t, customerDesireForType, fulfilmentForType, satisfactionForType);
+            satisfaction += satisfactionForType / NeedsType.values().length;
         }
+        LOG.debug("Overall satisfaction before normalization: {}", satisfaction);
         if (satisfaction < 0) {
             satisfaction = 0;
         } else if (satisfaction > 1) {

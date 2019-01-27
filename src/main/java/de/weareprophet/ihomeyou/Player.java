@@ -20,7 +20,7 @@ class Player {
     private int row = 0;
     private int column = 0;
     private int budget = 500;
-    private int skillPoints = 0;
+    private int skillPoints = 10;
 
     Player(IHomeYouGame game) {
         shape = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(GameGrid.SIZE - 2 * GameGrid.BORDERS, GameGrid.SIZE - 2 * GameGrid.BORDERS));
@@ -87,5 +87,17 @@ class Player {
     void signalMistake() {
         shape.setColor(ColorResource.RED);
         es.schedule(() -> shape.setColor(ColorResource.DARK_GRAY), 400, TimeUnit.MILLISECONDS);
+    }
+
+    int getSkillPoints() {
+        return skillPoints;
+    }
+
+    void spendSkillPoints(final int pointsToSpend) {
+        if (this.skillPoints < pointsToSpend) {
+            throw new IllegalArgumentException("Not enough skill points");
+        }
+        this.skillPoints -= pointsToSpend;
+        this.skillDisplay.setText(String.valueOf(this.skillPoints));
     }
 }
