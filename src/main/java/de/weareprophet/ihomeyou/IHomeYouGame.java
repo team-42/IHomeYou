@@ -38,26 +38,20 @@ public class IHomeYouGame extends Game {
                 event -> {
                     final AssetType selectedAsset = assetSelector.getSelected();
                     LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
-                    if (player.pay(selectedAsset.getPrice())) {
+                    if (assetSelector.isSelectedAvailable() && player.pay(selectedAsset.getPrice())) {
                         grid.setObject(
                                 player.getRow(),
                                 player.getColumn(),
                                 selectedAsset.getResource());
+                    } else {
+                        player.signalMistake();
                     }
                 });
 
-        addKeyReleasedEvent(KeyCode.W.getCode(), event -> {
-            placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP);
-        });
-        addKeyReleasedEvent(KeyCode.A.getCode(), event -> {
-            placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT);
-        });
-        addKeyReleasedEvent(KeyCode.S.getCode(), event -> {
-            placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM);
-        });
-        addKeyReleasedEvent(KeyCode.D.getCode(), event -> {
-            placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.RIGHT);
-        });
+        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP));
+        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.LEFT));
+        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.BOTTOM));
+        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(WallType.Vertical.getResource(), GameGrid.WallDirection.RIGHT));
     }
 
     private void placeWall(ImageResource wallType, GameGrid.WallDirection wallDirection) {

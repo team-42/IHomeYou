@@ -16,9 +16,11 @@ class Player {
     private final ShapeObject shape;
     private final SimpleText budgetDisplay;
     private final ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
+    private final SimpleText skillDisplay;
     private int row = 0;
     private int column = 0;
     private int budget = 1000;
+    private int skillPoints = 0;
 
     Player(IHomeYouGame game) {
         shape = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(GameGrid.SIZE - 2 * GameGrid.BORDERS, GameGrid.SIZE - 2 * GameGrid.BORDERS));
@@ -30,6 +32,9 @@ class Player {
         game.addObject(new SimpleText("Cash: €", game.getXOfRightColumn(), 20));
         budgetDisplay = new SimpleText(String.valueOf(budget), game.getXOfRightColumn() + 70, 20);
         game.addObject(budgetDisplay);
+        game.addObject(new SimpleText("Skill points:", game.getXOfRightColumn(), 40));
+        skillDisplay = new SimpleText(String.valueOf(skillPoints), game.getXOfRightColumn() + 120, 40);
+        game.addObject(skillDisplay);
 
         game.addKeyPressedEvent(KeyCode.RIGHT.getCode(), event -> {
             if (column < GameGrid.COLS - 1) {
@@ -57,27 +62,27 @@ class Player {
         });
     }
 
-    public int getRow() {
+    int getRow() {
         return row;
     }
 
-    public int getColumn() {
+    int getColumn() {
         return column;
     }
 
-    public int getBudget() {
-        return budget;
-    }
 
-    public boolean pay(int amount) {
+    boolean pay(int amount) {
         if (amount <= budget) {
             budget -= amount;
             budgetDisplay.setText(String.valueOf(budget));
             return true;
         } else {
-            shape.setColor(ColorResource.RED);
-            es.schedule(() -> shape.setColor(ColorResource.DARK_GRAY), 400, TimeUnit.MILLISECONDS);
             return false;
         }
+    }
+
+    void signalMistake() {
+        shape.setColor(ColorResource.RED);
+        es.schedule(() -> shape.setColor(ColorResource.DARK_GRAY), 400, TimeUnit.MILLISECONDS);
     }
 }
