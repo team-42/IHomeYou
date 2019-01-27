@@ -10,5 +10,9 @@ public enum NeedsType {
     Cleanliness,
     Decoration,
     Luxury,
-    PersonalNeeds;
+    Personal;
+
+    public String getLabel() {
+        return name();
+    }
 }

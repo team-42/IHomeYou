@@ -9,17 +9,29 @@ public class Customer {
 
     private final NeedsFulfillment desire;
 
-    private Customer(NeedsFulfillment desire) {
+    private final int numberOfPpl;
+
+    private Customer(int numberOfPpl, NeedsFulfillment desire) {
+        this.numberOfPpl = numberOfPpl;
         this.desire = desire;
     }
 
     public static Customer easyCustomer() {
-        return new Customer(NeedsFulfillment.builder()
+        return new Customer(1, NeedsFulfillment.builder()
                 .add(NeedsType.Storage, 40)
                 .add(NeedsType.Food, 40)
                 .add(NeedsType.Rest, 40)
-                .add(NeedsType.PersonalNeeds, 20)
+                .add(NeedsType.Personal, 20)
+                .add(NeedsType.Space, 20)
                 .build());
+    }
+
+    public int getNumberOfPpl() {
+        return numberOfPpl;
+    }
+
+    public NeedsFulfillment getDesire() {
+        return desire;
     }
 
     /**

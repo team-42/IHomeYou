@@ -20,7 +20,7 @@ class Player {
     private int row = 0;
     private int column = 0;
     private int budget = 500;
-    private int skillPoints = 10;
+    private int skillPoints = 1;
 
     Player(IHomeYouGame game) {
         shape = new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(GameGrid.SIZE - 2 * GameGrid.BORDERS, GameGrid.SIZE - 2 * GameGrid.BORDERS));

@@ -5,11 +5,19 @@ import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
+import de.weareprophet.ihomeyou.customer.NeedsType;
 import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
+import org.frice.obj.button.SimpleText;
+import org.frice.resource.graphics.ColorResource;
 import org.frice.resource.image.ImageResource;
+
+import java.text.NumberFormat;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
 
 import static org.frice.Initializer.launch;
 
@@ -19,7 +27,10 @@ public class IHomeYouGame extends Game {
     GameGrid grid;
     private Player player;
     private AssetSelector assetSelector;
-    private Customer customer = Customer.easyCustomer();
+    private Customer customer;
+    private SimpleText customerNumberOfPpl;
+    private Map<NeedsType, SimpleText> customerNeedLabels;
+    private SimpleText satisfactionOutput;
 
 
     public static void main(String[] args) {
@@ -35,7 +46,16 @@ public class IHomeYouGame extends Game {
         setTitle("I Home You!");
         grid = new GameGrid(this);
         player = new Player(this);
+        customer = Customer.easyCustomer();
+        initNeedLabels();
         assetSelector = new AssetSelector(this);
+        addObject(new SimpleText("Current customer information", getXOfRightColumn(), 80));
+        addObject(new SimpleText("Number of people: ", getXOfRightColumn(), 110));
+        customerNumberOfPpl = new SimpleText("", getXOfRightColumn() + 170, 110);
+        addObject(customerNumberOfPpl);
+        addObject(new SimpleText("Customer satisfaction: ", getXOfRightColumn(), 340));
+        satisfactionOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter to evaluate", getXOfRightColumn(), 360);
+        addObject(satisfactionOutput);
 
         addKeyReleasedEvent(KeyCode.SPACE.getCode(),
                 event -> {
@@ -56,7 +76,20 @@ public class IHomeYouGame extends Game {
                     for (final AssetType asset : grid.getAssetsInGrid()) {
                         fulfilment.add(asset.getNeedsFulfillment());
                     }
-                    LOG.info("Customer satisfaction: {}", customer.measureSatisfaction(fulfilment.build()));
+                    double satisfaction = customer.measureSatisfaction(fulfilment.build());
+                    LOG.info("Customer satisfaction: {}", satisfaction);
+                    satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
+                    final ColorResource color;
+                    if (satisfaction < 0.2) {
+                        color = ColorResource.RED;
+                    } else if (satisfaction < 0.5) {
+                        color = ColorResource.ORANGE;
+                    } else if (satisfaction < 0.8) {
+                        color = new ColorResource(156, 240, 0);
+                    } else {
+                        color = ColorResource.GREEN;
+                    }
+                    satisfactionOutput.setColor(color);
                 });
 
         addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(WallType.Horizontal.getResource(), GameGrid.WallDirection.TOP));
@@ -71,6 +104,42 @@ public class IHomeYouGame extends Game {
                 LOG.debug("Unlocked asset: {}", selectedAsset.getName());
             }
         });
+
+        renderCustomerInfo();
+    }
+
+    private void initNeedLabels() {
+        customerNeedLabels = new EnumMap<>(NeedsType.class);
+        int yOffset = 130;
+        for (final NeedsType t : NeedsType.values()) {
+            addObject(new SimpleText(t.getLabel() + " need:", getXOfRightColumn(), yOffset));
+            SimpleText needIntensityLabel = new SimpleText("", getXOfRightColumn() + 170, yOffset);
+            customerNeedLabels.put(t, needIntensityLabel);
+            addObject(needIntensityLabel);
+            yOffset += 20;
+        }
+    }
+
+    private void renderCustomerInfo() {
+        customerNumberOfPpl.setText(String.valueOf(customer.getNumberOfPpl()));
+        Map<NeedsType, Integer> customerDesires = customer.getDesire().getNeeds();
+        for (final NeedsType t : NeedsType.values()) {
+            final Integer desireForType = customerDesires.getOrDefault(t, 0);
+            SimpleText needLabel = customerNeedLabels.get(t);
+            if (desireForType == 0) {
+                needLabel.setText("None");
+                needLabel.setColor(ColorResource.LIGHT_GRAY);
+            } else if (desireForType < 50) {
+                needLabel.setText("Low");
+                needLabel.setColor(ColorResource.GREEN);
+            } else if (desireForType < 100) {
+                needLabel.setText("Medium");
+                needLabel.setColor(ColorResource.ORANGE);
+            } else {
+                needLabel.setText("High");
+                needLabel.setColor(ColorResource.RED);
+            }
+        }
     }
 
     private void placeWall(ImageResource wallType, GameGrid.WallDirection wallDirection) {
