@@ -9,6 +9,7 @@ import java.util.*;
 public class Room {
     private Set<Tile> roomTiles = new HashSet<>();
     private RoomTypes roomType;
+    private boolean accessible = false;
 
     public void addAllTiles(Collection<Tile> tiles) {
         roomTiles.addAll(tiles);
@@ -16,6 +17,10 @@ public class Room {
 
     public Collection<Tile> getTiles() {
         return roomTiles;
+    }
+
+    public boolean isTilePartOfRoom(Tile t) {
+        return roomTiles.contains(t);
     }
 
     public List<FurnitureObject> getRoomInventory(Table<Integer, Integer, FurnitureObject> gameGrid) {
@@ -36,6 +41,14 @@ public class Room {
 
     public RoomTypes getRoomType() {
         return roomType;
+    }
+
+    public boolean isAccessible() {
+        return accessible;
+    }
+
+    public void setAccessible(boolean accessible) {
+        this.accessible = accessible;
     }
 
     @Override

@@ -1,10 +1,14 @@
 package de.weareprophet.ihomeyou.datastructure.room;
 
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.asset.FloorType;
+import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.datastructure.*;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +41,52 @@ public class RoomManager {
             roomList.add(r);
         }
         this.rooms = roomList;
+    }
+
+    public void calculateRoomAccessibility(Multimap<Tile, WallEdge> wallEdgeHashMap) {
+        SimpleGraph<Room, DefaultEdge> roomGraph = new SimpleGraph<>(DefaultEdge.class);
+
+        // create vertex for each room
+        rooms.forEach(roomGraph::addVertex);
+
+        Room outdoor = null;
+
+        for(Room r : rooms) {
+            if(r.getRoomType() != null && r.getRoomType().equals(RoomTypes.OUTDOOR)) outdoor = r;
+            for(Tile t : r.getTiles()) {
+                if(wallEdgeHashMap.containsKey(t)) {
+                    for (WallEdge we : wallEdgeHashMap.get(t)) {
+                        if (we.getType().equals(WallType.Door)) {
+                            Tile neighborTile = null;
+                            switch (we.getDirection()) {
+                                case TOP:
+                                    neighborTile = Tile.of(we.getSource().getColumn(), we.getSource().getRow()-1);
+                                    break;
+                                case BOTTOM:
+                                    neighborTile = Tile.of(we.getSource().getColumn(), we.getSource().getRow());
+                                    break;
+                                case LEFT:
+                                    neighborTile = Tile.of(we.getSource().getColumn()-1, we.getSource().getRow());
+                                    break;
+                                case RIGHT:
+                                    neighborTile = Tile.of(we.getSource().getColumn(), we.getSource().getRow());
+                                    break;
+                            }
+                            for(Room neighborRoomCandidate : rooms) {
+                                if(neighborRoomCandidate.isTilePartOfRoom(neighborTile)) {
+                                    roomGraph.addEdge(r, neighborRoomCandidate);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // calculate connectivity
+        ConnectivityInspector<Room, DefaultEdge> ci = new ConnectivityInspector<>(roomGraph);
+        Set<Room> accessibleRooms = ci.connectedSetOf(outdoor);
+        accessibleRooms.forEach(r -> r.setAccessible(true));
     }
 
     public void setRoomGroundTile(Table<Integer, Integer, FurnitureObject> gameGrid, GroundTileHandler gth, Graph<Tile, WallEdge> wallGraph) {

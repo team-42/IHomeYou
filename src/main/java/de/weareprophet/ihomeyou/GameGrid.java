@@ -59,6 +59,10 @@ public class GameGrid {
         init();
     }
 
+    public void calculateRoomAccessibility() {
+        roomManager.calculateRoomAccessibility(wallEdgeHashMap);
+    }
+
     public void init() {
         wallEdgeHashMap = HashMultimap.create();
         gameGrid = HashBasedTable.create();
@@ -181,6 +185,7 @@ public class GameGrid {
         }
         if(w != null) {
             w.setType(wallType);
+            w.setDirection(dir);
             wallEdgeHashMap.put(Tile.of(column, row), w);
         }
 
