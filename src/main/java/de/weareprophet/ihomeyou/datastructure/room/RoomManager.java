@@ -2,10 +2,7 @@ package de.weareprophet.ihomeyou.datastructure.room;
 
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.asset.FloorType;
-import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
-import de.weareprophet.ihomeyou.datastructure.GroundTileHandler;
-import de.weareprophet.ihomeyou.datastructure.SimpleEdge;
-import de.weareprophet.ihomeyou.datastructure.Tile;
+import de.weareprophet.ihomeyou.datastructure.*;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 
@@ -42,7 +39,7 @@ public class RoomManager {
         this.rooms = roomList;
     }
 
-    public void setRoomGroundTile(Table<Integer, Integer, FurnitureObject> gameGrid, GroundTileHandler gth, Graph<Tile, SimpleEdge> wallGraph) {
+    public void setRoomGroundTile(Table<Integer, Integer, FurnitureObject> gameGrid, GroundTileHandler gth, Graph<Tile, WallEdge> wallGraph) {
         for(Room r : rooms) {
             boolean draw = true;
             for(Tile t : r.getTiles()) {

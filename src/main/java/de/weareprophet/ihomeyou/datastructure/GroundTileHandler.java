@@ -14,7 +14,6 @@ public class GroundTileHandler {
 
     public GroundTileHandler(IHomeYouGame iHomeYouGame) {
         gameGridGroundTile = HashBasedTable.create();
-        this.gameGridGroundTile = gameGridGroundTile;
         this.iHomeYouGame = iHomeYouGame;
     }
 

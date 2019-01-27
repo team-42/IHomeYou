@@ -1,16 +1,15 @@
 package de.weareprophet.ihomeyou;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import de.weareprophet.ihomeyou.asset.AssetType;
-import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
-import de.weareprophet.ihomeyou.datastructure.GroundTileHandler;
+import de.weareprophet.ihomeyou.asset.WallType;
+import de.weareprophet.ihomeyou.datastructure.*;
 import de.weareprophet.ihomeyou.datastructure.room.Room;
-import de.weareprophet.ihomeyou.datastructure.SimpleEdge;
-import de.weareprophet.ihomeyou.datastructure.Tile;
 import de.weareprophet.ihomeyou.datastructure.room.RoomManager;
 import org.frice.obj.sub.ImageObject;
-import org.frice.resource.image.ImageResource;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.io.ComponentNameProvider;
@@ -21,6 +20,7 @@ import org.jgrapht.io.GraphExporter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class GameGrid {
@@ -29,8 +29,10 @@ public class GameGrid {
     private Table<Integer, Integer, FurnitureObject> gameGrid;
     private List<ImageObject> walls;
     private IHomeYouGame ihyg;
-    private Graph<Tile, SimpleEdge> wallGraph;
+    private Graph<Tile, WallEdge> wallGraph;
     private Graph<Tile, SimpleEdge> tileGraph;
+
+    private Multimap<Tile, WallEdge> wallEdgeHashMap;
 
 
     public static final int SIZE = 64;
@@ -58,6 +60,7 @@ public class GameGrid {
     }
 
     public void init() {
+        wallEdgeHashMap = HashMultimap.create();
         gameGrid = HashBasedTable.create();
         walls = new ArrayList<>();
         wallGraph = null;
@@ -78,8 +81,21 @@ public class GameGrid {
         return room.getRoomInventory(gameGrid);
     }
 
-    private Graph<Tile, SimpleEdge> initWallGraph() {
-        Graph<Tile, SimpleEdge> graph = new SimpleGraph<>(SimpleEdge.class);
+    public int getNumWallTypeInRoom(WallType type, Room r) {
+        int count = 0;
+        for(Tile t : r.getTiles()) {
+            if(wallEdgeHashMap.containsKey(t)) {
+                for (WallEdge we : wallEdgeHashMap.get(t)) {
+                    if (we.getType().equals(type)) count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private Graph<Tile, WallEdge> initWallGraph() {
+        Graph<Tile, WallEdge> graph = new SimpleGraph<>(WallEdge.class);
 
         // add vertices
         for(int c = 0; c <= COLS+1; c++) {
@@ -126,42 +142,48 @@ public class GameGrid {
         return false;
     }
 
-    public boolean setWall(int row, int column, ImageResource res, WallDirection dir) {
+    public boolean setWall(int row, int column, WallType wallType, WallDirection dir) {
         if(row == 0 || column == 0 || row == ROWS-1 || column == COLS-1) {
             return false;
         }
 
         ImageObject obj = null;
+        WallEdge w = null;
         switch (dir) {
             case TOP:
-                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
+                obj = new ImageObject(wallType.getResource(WallDirection.TOP), SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
                 if(wallGraph.containsEdge(Tile.of(column, row), Tile.of(column+1,row))) return false;
-                wallGraph.addEdge(Tile.of(column, row), Tile.of(column+1,row));
+                w = wallGraph.addEdge(Tile.of(column, row), Tile.of(column+1,row));
 
                 if(row-1 >= 0) tileGraph.removeEdge(Tile.of(column, row-1), Tile.of(column, row));
                 break;
             case BOTTOM:
-                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
+                obj = new ImageObject(wallType.getResource(WallDirection.BOTTOM), SIZE * column + BORDERS - 4, SIZE * row + 64 + BORDERS - 4);
                 if(wallGraph.containsEdge(Tile.of(column, row+1), Tile.of(column+1,row+1))) return false;
-                wallGraph.addEdge(Tile.of(column, row+1), Tile.of(column+1,row+1));
+                w = wallGraph.addEdge(Tile.of(column, row+1), Tile.of(column+1,row+1));
 
                 if(row+1 < ROWS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column, row+1));
                 break;
             case LEFT:
-                obj = new ImageObject(res, SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
+                obj = new ImageObject(wallType.getResource(WallDirection.LEFT), SIZE * column + BORDERS - 4, SIZE * row + BORDERS - 4);
                 if(wallGraph.containsEdge(Tile.of(column, row), Tile.of(column,row+1))) return false;
-                wallGraph.addEdge(Tile.of(column, row), Tile.of(column,row+1));
+                w = wallGraph.addEdge(Tile.of(column, row), Tile.of(column,row+1));
 
                 if(column-1 >= 0) tileGraph.removeEdge(Tile.of(column-1, row), Tile.of(column, row));
                 break;
             case RIGHT:
-                obj = new ImageObject(res, SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
+                obj = new ImageObject(wallType.getResource(WallDirection.RIGHT), SIZE * column + 64 + BORDERS - 4, SIZE * row + BORDERS - 4);
                 if(wallGraph.containsEdge(Tile.of(column+1, row), Tile.of(column+1,row+1))) return false;
-                wallGraph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
+                w = wallGraph.addEdge(Tile.of(column+1, row), Tile.of(column+1,row+1));
 
                 if(column+1 < COLS) tileGraph.removeEdge(Tile.of(column, row), Tile.of(column+1, row));
                 break;
         }
+        if(w != null) {
+            w.setType(wallType);
+            wallEdgeHashMap.put(Tile.of(column, row), w);
+        }
+
         walls.add(obj);
         ihyg.addObject(obj);
 
