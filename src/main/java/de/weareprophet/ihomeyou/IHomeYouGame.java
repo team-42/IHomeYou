@@ -15,7 +15,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
 import org.frice.obj.button.SimpleText;
+import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
+import org.frice.util.shape.FRectangle;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
@@ -79,6 +81,8 @@ public class IHomeYouGame extends Game {
         addObject(satisfactionOutput);
         prestigeOutput = new SimpleText(ColorResource.GREEN, "", getXOfRightColumn() + 50, 360);
         nextLevelOutput = new SimpleText(ColorResource.LIGHT_GRAY, "Press Enter for next customer", getXOfRightColumn(), 380);
+        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300,2),getXOfRightColumn(),60));
+        addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300,2),getXOfRightColumn(),400));
 
         addKeyReleasedEvent(KeyCode.SPACE.getCode(),
                 event -> {
