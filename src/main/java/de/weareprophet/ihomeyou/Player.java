@@ -1,12 +1,12 @@
 package de.weareprophet.ihomeyou;
 
-import javafx.scene.input.KeyCode;
 import org.frice.anim.rotate.SimpleRotate;
 import org.frice.obj.button.SimpleText;
 import org.frice.obj.sub.ShapeObject;
 import org.frice.resource.graphics.ColorResource;
 import org.frice.util.shape.FRectangle;
 
+import java.awt.event.KeyEvent;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -34,25 +34,25 @@ class Player {
         skillDisplay = new SimpleText(String.valueOf(skillPoints), game.getXOfRightColumn() + 120, 40);
         game.addObject(skillDisplay);
 
-        game.addKeyPressedEvent(KeyCode.RIGHT.getCode(), event -> {
+        game.addKeyPressedEvent(KeyEvent.VK_RIGHT, event -> {
             if (column < GameGrid.COLS - 1) {
                 shape.move(GameGrid.SIZE, 0);
                 column++;
             }
         });
-        game.addKeyPressedEvent(KeyCode.LEFT.getCode(), event -> {
+        game.addKeyPressedEvent(KeyEvent.VK_LEFT, event -> {
             if (column > 0) {
                 shape.move(-GameGrid.SIZE, 0);
                 column--;
             }
         });
-        game.addKeyPressedEvent(KeyCode.UP.getCode(), event -> {
+        game.addKeyPressedEvent(KeyEvent.VK_UP, event -> {
             if (row > 0) {
                 shape.move(0, -GameGrid.SIZE);
                 row--;
             }
         });
-        game.addKeyPressedEvent(KeyCode.DOWN.getCode(), event -> {
+        game.addKeyPressedEvent(KeyEvent.VK_DOWN, event -> {
             if (row < GameGrid.ROWS - 1) {
                 shape.move(0, GameGrid.SIZE);
                 row++;

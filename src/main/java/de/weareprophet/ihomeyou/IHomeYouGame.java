@@ -10,7 +10,6 @@ import de.weareprophet.ihomeyou.customer.NeedsType;
 import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
 import de.weareprophet.ihomeyou.datastructure.room.Room;
 import de.weareprophet.ihomeyou.datastructure.room.RoomTypes;
-import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
@@ -56,7 +55,7 @@ public class IHomeYouGame extends Game {
 
 
     public static void main(String[] args) {
-        launch(IHomeYouGame.class);
+        launch(new IHomeYouGame());
     }
 
 
@@ -85,7 +84,7 @@ public class IHomeYouGame extends Game {
         addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 60));
         addObject(new ShapeObject(ColorResource.DARK_GRAY, new FRectangle(300, 2), getXOfRightColumn(), 400));
 
-        addKeyReleasedEvent(KeyCode.SPACE.getCode(),
+        addKeyReleasedEvent(KeyEvent.VK_SPACE,
                 event -> {
                     final AssetType selectedAsset = assetSelector.getSelected();
                     LOG.debug("New {} placed at row {} col {}", selectedAsset.name(), player.getRow(), player.getColumn());
@@ -98,11 +97,11 @@ public class IHomeYouGame extends Game {
                         player.signalMistake(ES);
                     }
                 });
-        addKeyReleasedEvent(KeyCode.W.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.TOP));
-        addKeyReleasedEvent(KeyCode.A.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.LEFT));
-        addKeyReleasedEvent(KeyCode.S.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.BOTTOM));
-        addKeyReleasedEvent(KeyCode.D.getCode(), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.RIGHT));
-        addKeyPressedEvent(KeyCode.U.getCode(), event -> {
+        addKeyReleasedEvent(KeyEvent.getExtendedKeyCodeForChar('W'), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.TOP));
+        addKeyReleasedEvent(KeyEvent.getExtendedKeyCodeForChar('A'), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.LEFT));
+        addKeyReleasedEvent(KeyEvent.getExtendedKeyCodeForChar('S'), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.BOTTOM));
+        addKeyReleasedEvent(KeyEvent.getExtendedKeyCodeForChar('D'), event -> placeWall(wallSelector.getSelected(), GameGrid.WallDirection.RIGHT));
+        addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('U'), event -> {
             final AssetType selectedAsset = assetSelector.getSelected();
             if (!assetSelector.isSelectedAvailable() && player.getSkillPoints() >= selectedAsset.getSkillPoints()) {
                 player.spendSkillPoints(selectedAsset.getSkillPoints());
@@ -112,7 +111,7 @@ public class IHomeYouGame extends Game {
                 player.signalMistake(ES);
             }
         });
-        addKeyReleasedEvent(KeyCode.ENTER.getCode(), getEvaluationListener());
+        addKeyReleasedEvent(KeyEvent.VK_ENTER, getEvaluationListener());
 
         nextCustomer(1.0);
         renderCustomerInfo();
@@ -180,7 +179,7 @@ public class IHomeYouGame extends Game {
 
     private void calculateRoomFulfilment(NeedsFulfillment.Builder fulfilment) {
         List<Room> rooms = grid.getRoomManager().getRooms();
-        fulfilment.add(NeedsType.Space, (int)((rooms.size() - 1) * 30 * Customer.NEED_ADJUSTMENT_FACTOR));
+        fulfilment.add(NeedsType.Space, (int) ((rooms.size() - 1) * 30 * Customer.NEED_ADJUSTMENT_FACTOR));
         for (int i = 1; i < rooms.size(); i++) { // skip the first element bc that's the outside
             final Room r = rooms.get(i);
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);

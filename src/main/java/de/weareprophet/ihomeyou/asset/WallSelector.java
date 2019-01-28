@@ -1,9 +1,10 @@
 package de.weareprophet.ihomeyou.asset;
 
 import de.weareprophet.ihomeyou.IHomeYouGame;
-import javafx.scene.input.KeyCode;
 import org.frice.obj.button.SimpleText;
 import org.frice.obj.sub.ImageObject;
+
+import java.awt.event.KeyEvent;
 
 public class WallSelector {
 
@@ -19,15 +20,15 @@ public class WallSelector {
         selectedWallImage = new ImageObject(selected.getHorizontalResource(), game.getXOfRightColumn() + 180, 30);
         game.addObject(selectedWallImage);
         updateSelectedTypeDescription();
-        game.addKeyPressedEvent(KeyCode.DIGIT1.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('1'), keyEvent -> {
             selected = WallType.Solid;
             updateSelectedTypeDescription();
         });
-        game.addKeyPressedEvent(KeyCode.DIGIT2.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('2'), keyEvent -> {
             selected = WallType.Window;
             updateSelectedTypeDescription();
         });
-        game.addKeyPressedEvent(KeyCode.DIGIT3.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('3'), keyEvent -> {
             selected = WallType.Door;
             updateSelectedTypeDescription();
         });

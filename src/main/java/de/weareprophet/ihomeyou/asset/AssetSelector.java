@@ -1,13 +1,13 @@
 package de.weareprophet.ihomeyou.asset;
 
 import de.weareprophet.ihomeyou.IHomeYouGame;
-import javafx.scene.input.KeyCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.obj.button.SimpleText;
 import org.frice.obj.sub.ImageObject;
 import org.frice.resource.graphics.ColorResource;
 
+import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -48,11 +48,11 @@ public class AssetSelector {
         game.addObject(availability);
         game.addObject(new SimpleText(ColorResource.BLACK, "Selected object:", game.getXOfRightColumn(), Y_OFFSET));
         updateSelectedInfo();
-        game.addKeyPressedEvent(KeyCode.Q.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('Q'), keyEvent -> {
             selected = (selected - 1 + assets.size()) % assets.size();
             updateSelectedInfo();
         });
-        game.addKeyPressedEvent(KeyCode.E.getCode(), keyEvent -> {
+        game.addKeyPressedEvent(KeyEvent.getExtendedKeyCodeForChar('E'), keyEvent -> {
             selected = (selected + 1) % assets.size();
             updateSelectedInfo();
         });
