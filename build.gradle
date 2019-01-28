@@ -29,6 +29,20 @@ dependencies {
 
 sourceCompatibility = '1.11'
 targetCompatibility = '1.11'
+compileJava.options.encoding = 'UTF-8'
+
+mainClassName = 'de.weareprophet.ihomeyou.IHomeYouGame'
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': mainClassName
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
 
 idea {
     module {

@@ -15,6 +15,6 @@ public enum FloorType {
     }
 
     public ImageResource getResource() {
-        return ImageResource.fromPath(getClass().getResource(imagePath).getPath());
+        return ImageResource.fromWeb(getClass().getResource(imagePath).toString());
     }
 }

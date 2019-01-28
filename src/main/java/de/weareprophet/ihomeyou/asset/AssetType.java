@@ -100,11 +100,11 @@ public enum AssetType {
     }
 
     public ImageResource getResource() {
-        return ImageResource.fromPath(this.getImageUrl().getPath());
+        return ImageResource.fromWeb(this.getImageUrl().toString());
     }
 
     public ImageResource getLargeResource() {
-        return ImageResource.fromPath(this.getLargeImageUrl().getPath());
+        return ImageResource.fromWeb(this.getLargeImageUrl().toString());
     }
 
     public URL getImageUrl() {

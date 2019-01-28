@@ -29,7 +29,7 @@ public enum WallType {
     }
 
     public ImageResource getHorizontalResource() {
-        return ImageResource.fromPath(this.getHorizontalImageUrl().getPath());
+        return ImageResource.fromWeb(this.getHorizontalImageUrl().toString());
     }
 
     public URL getVerticalImageUrl() {
@@ -37,7 +37,7 @@ public enum WallType {
     }
 
     public ImageResource getVerticalResource() {
-        return ImageResource.fromPath(this.getVerticalImageUrl().getPath());
+        return ImageResource.fromWeb(this.getVerticalImageUrl().toString());
     }
 
     public int getPrice() {
