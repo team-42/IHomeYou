@@ -30,8 +30,8 @@ import java.util.function.Consumer;
 import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
+    public static final int MAX_DIFFICULTY = 400;
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
-    private static final int MAX_DIFFICULTY = 400;
     private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
     private WallSelector wallSelector;
 
@@ -180,6 +180,7 @@ public class IHomeYouGame extends Game {
 
     private void calculateRoomFulfilment(NeedsFulfillment.Builder fulfilment) {
         List<Room> rooms = grid.getRoomManager().getRooms();
+        fulfilment.add(NeedsType.Space, (int)((rooms.size() - 1) * 30 * Customer.NEED_ADJUSTMENT_FACTOR));
         for (int i = 1; i < rooms.size(); i++) { // skip the first element bc that's the outside
             final Room r = rooms.get(i);
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
@@ -284,19 +285,19 @@ public class IHomeYouGame extends Game {
             if (desireForType == 0) {
                 needLabel.setText("None");
                 needLabel.setColor(ColorResource.LIGHT_GRAY);
-            } else if (desireForType < 60) {
+            } else if (desireForType < 30 * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Minimal");
                 needLabel.setColor(new ColorResource(0, 213, 106));
-            } else if (desireForType < 120) {
+            } else if (desireForType < 80 * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Low");
                 needLabel.setColor(ColorResource.GREEN);
-            } else if (desireForType < 180) {
+            } else if (desireForType < 160 * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Moderate");
                 needLabel.setColor(new ColorResource(156, 240, 0));
-            } else if (desireForType < 240) {
+            } else if (desireForType < 240 * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Medium");
                 needLabel.setColor(ColorResource.ORANGE);
-            } else if (desireForType < 300) {
+            } else if (desireForType < 320 * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("High");
                 needLabel.setColor(ColorResource.RED);
             } else {

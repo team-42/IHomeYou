@@ -1,11 +1,14 @@
 package de.weareprophet.ihomeyou.customer;
 
+import de.weareprophet.ihomeyou.IHomeYouGame;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class Customer {
+
+    public static final float NEED_ADJUSTMENT_FACTOR = 1.6f;
 
     private static final Logger LOG = LogManager.getLogger(Customer.class);
 
@@ -40,6 +43,7 @@ public class Customer {
         int overallNeeds = 0;
 
         final Set<NeedsType> possibleNeeds = EnumSet.allOf(NeedsType.class);
+        possibleNeeds.remove(NeedsType.Space);
 
         if (difficulty < 120) {
             possibleNeeds.remove(NeedsType.Comfort);
@@ -57,14 +61,15 @@ public class Customer {
         final int numNeeds = Math.min(possibleNeeds.size(), difficulty / 40);
         for (int i = 0; i < numNeeds; i++) {
             NeedsType needsType = actualNeeds.get(i);
-            int intensity = r.nextInt(difficulty);
+            int intensity = r.nextInt((int) (difficulty * NEED_ADJUSTMENT_FACTOR));
             overallNeeds += intensity;
             needs.add(needsType, intensity);
         }
 
-        int numberOfPpl = Math.min(6, 1 + (overallNeeds / 300));
-        int prestige = 1 + (difficulty / 120);
-        return new Customer(numberOfPpl, (int) (overallNeeds * 1.5 + 100), prestige, needs
+        int numberOfPpl = Math.max(1, Math.min(6, difficulty / 60));
+        needs.add(NeedsType.Space, numberOfPpl * 30 + r.nextInt(difficulty));
+        int prestige = 1 + (int) (difficulty / (IHomeYouGame.MAX_DIFFICULTY / 3.3));
+        return new Customer(numberOfPpl, (int) (overallNeeds * 1.8 + 100), prestige, needs
                 .build());
     }
 
