@@ -1,16 +1,16 @@
 package de.weareprophet.ihomeyou.customer;
 
 public enum NeedsType {
-    Food,
-    Rest,
     Space,
+    Rest,
     Work,
     Storage,
-    Comfort,
     Cleanliness,
+    Personal,
+    Food,
+    Comfort,
     Decoration,
-    Luxury,
-    Personal;
+    Luxury;
 
     public String getLabel() {
         return name();
