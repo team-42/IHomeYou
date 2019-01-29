@@ -97,7 +97,7 @@ class ScoringHelper {
                     applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Personal);
                     break;
                 case HALLWAY:
-                    fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 4);
+                    fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
                     break;
                 default:
             }
@@ -108,6 +108,6 @@ class ScoringHelper {
         for (final FurnitureObject assetInRoom : assetsInRoom) {
             fulfilment.add(needsType, assetInRoom.getType().getNeedsFulfillment().getNeeds().getOrDefault(needsType, 0) * (roomSize - assetCount) / 30);
         }
-        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 4);
+        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
     }
 }
