@@ -32,9 +32,13 @@ pay you. To win the game, satisfy all customers. If a customer is satisfied less
 | U                   | Unlock selected furniture         |
 | Enter               | Handover flat to customer         |
 
-## Screenshot
+## Screenshots
 
-![I Home You! Screenshot](IHomeYou_Level5.jpg)
+![I Home You! Screenshot](screenshots/IHomeYou_Level1.png)
+
+![I Home You! Screenshot](screenshots/IHomeYou_Level2.png)
+
+![I Home You! Screenshot](screenshots/IHomeYou_Level5.jpg)
 
 ## Background
 
