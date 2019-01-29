@@ -6,7 +6,8 @@ public enum FloorType {
     GRASS ("floor_grass.png"),
     TILE ("floor_tile.png"),
     TILE_KITCHEN ("floor_kitchen.png"),
-    WOOD ("floor_wood.png");
+    WOOD ("floor_wood.png"),
+    OFFICE("floor_office.png");
 
     private String imagePath;
 

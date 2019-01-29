@@ -151,6 +151,10 @@ public class RoomManager {
                     for (Tile t : r.getTiles()) {
                         gth.setGroundTile(FloorType.TILE_KITCHEN, t.getColumn(), t.getRow());
                     }
+                } else if(maxEntry.getKey().equals(RoomTypes.OFFICE)) {
+                    for (Tile t : r.getTiles()) {
+                        gth.setGroundTile(FloorType.OFFICE, t.getColumn(), t.getRow());
+                    }
                 } else {
                     for (Tile t : r.getTiles()) {
                         gth.setGroundTile(FloorType.WOOD, t.getColumn(), t.getRow());
