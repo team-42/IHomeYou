@@ -50,4 +50,6 @@ This game has been created during the Global Game Jam 2019 at the jam site Leipz
 * Backend Graph Analysis - merando
 * Graphics - IP
 * Game Mechanics - SharkofMetal
-* External assets used: [Furniture icon set](https://www.iconfinder.com/iconsets/furniture-180)
+* External assets used:
+  * [Furniture icon set](https://www.iconfinder.com/iconsets/furniture-180)
+  * [Doing housework icon set](https://www.iconfinder.com/iconsets/doing-housework-part-1)

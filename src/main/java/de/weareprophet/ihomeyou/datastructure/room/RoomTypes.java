@@ -9,13 +9,13 @@ import java.util.Set;
 import static de.weareprophet.ihomeyou.asset.AssetType.*;
 
 public enum RoomTypes {
-    KITCHEN(DinnerTable, Kitchen, Fishbowl, Shelf, KitchenTable, Oven),
-    BATH(Bathtub, Toilet, Shelf),
-    LIVING_ROOM(Shelf, Music, DinnerTable, BookShelf, Curtains, Couch, Tv, PrayerCarpet, Fishbowl, Picture, Cabinet),
-    BED_ROOM(Shelf, Wardrobe, Curtains, PrayerCarpet, BookShelf, Picture, Bed, Bedside, Cabinet),
-    HALLWAY(Shelf, Bench, BookShelf, Picture, Cabinet),
-    OUTDOOR(Bench),
-    OFFICE(Shelf, Desk, PlainDesk, Curtains, BookShelf, Picture, Cabinet);
+    KITCHEN(DinnerTable, Kitchen, Fishbowl, Shelf, KitchenTable, Oven, Microwave, Fridge, Flower),
+    BATH(Bathtub, Toilet, WashingMachine, Shelf, Flower, Mirror),
+    LIVING_ROOM(Shelf, Music, DinnerTable, BookShelf, Curtains, Armchair, Couch, Tv, PrayerCarpet, Fishbowl, Picture, Cabinet, Chandelier, Flower),
+    BED_ROOM(Shelf, Wardrobe, Curtains, PrayerCarpet, BookShelf, Picture, Bed, Bedside, Cabinet, Chandelier, Flower),
+    HALLWAY(Shelf, Bench, BookShelf, Picture, Cabinet, Chandelier, Flower, Mirror),
+    OUTDOOR(Bench, Flower),
+    OFFICE(Shelf, Desk, PlainDesk, Curtains, BookShelf, Picture, Cabinet, Armchair, Flower);
 
     Set<AssetType> validAssetTypes;
 
