@@ -7,9 +7,6 @@ import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import de.weareprophet.ihomeyou.customer.NeedsType;
-import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
-import de.weareprophet.ihomeyou.datastructure.room.Room;
-import de.weareprophet.ihomeyou.datastructure.room.RoomTypes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.frice.Game;
@@ -21,7 +18,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
@@ -29,9 +29,13 @@ import java.util.function.Consumer;
 import static org.frice.Initializer.launch;
 
 public class IHomeYouGame extends Game {
-    public static final int MAX_DIFFICULTY = 400;
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
     private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
+    private static final ColorResource YELLOW_GREEN = new ColorResource(156, 240, 0);
+    private static final ColorResource DARK_RED = new ColorResource(128, 0, 0);
+    private static final ColorResource LIGHT_GREEN = new ColorResource(0, 213, 106);
+    private static final int INITIAL_DIFFICULTY = Customer.MAX_DIFFICULTY / 6;
+    private static final int DIFFICULTY_INCREASE_PER_LEVEL = Customer.MAX_DIFFICULTY / 10;
     private WallSelector wallSelector;
 
     private enum GameState {
@@ -41,7 +45,7 @@ public class IHomeYouGame extends Game {
         Victory;
     }
 
-    GameGrid grid;
+    private GameGrid grid;
     private Player player;
     private AssetSelector assetSelector;
     private int difficulty;
@@ -67,7 +71,7 @@ public class IHomeYouGame extends Game {
         setTitle("I Home You!");
         grid = new GameGrid(this);
         player = new Player(this);
-        difficulty = 70;
+        difficulty = INITIAL_DIFFICULTY;
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
@@ -128,13 +132,13 @@ public class IHomeYouGame extends Game {
             if (gameState == GameState.InLevel) {
                 grid.calculateRoomAccessibility();
                 final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
-                calculateRoomFulfilment(fulfilment);
+                new ScoringHelper(grid).calculateRoomFulfilment(fulfilment);
                 double satisfaction = currentCustomer.measureSatisfaction(fulfilment.build());
                 LOG.info("Customer satisfaction: {}", satisfaction);
                 satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
                 addObject(nextLevelOutput);
                 final ColorResource color;
-                if (difficulty == MAX_DIFFICULTY) {
+                if (difficulty == Customer.MAX_DIFFICULTY) {
                     gameState = GameState.Victory;
                     nextLevelOutput.setColor(ColorResource.GREEN);
                     player.kill();
@@ -151,7 +155,7 @@ public class IHomeYouGame extends Game {
                 } else if (satisfaction < 0.5) {
                     color = ColorResource.ORANGE;
                 } else if (satisfaction < 0.8) {
-                    color = new ColorResource(156, 240, 0);
+                    color = YELLOW_GREEN;
                 } else {
                     color = ColorResource.GREEN;
                 }
@@ -160,7 +164,7 @@ public class IHomeYouGame extends Game {
                     prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
                     addObject(prestigeOutput);
                     player.addSkillPoints(currentCustomer.getPrestige());
-                    difficulty = Math.min(MAX_DIFFICULTY, difficulty + 40);
+                    difficulty = Math.min(Customer.MAX_DIFFICULTY, difficulty + DIFFICULTY_INCREASE_PER_LEVEL);
                     nextCustomer(satisfaction);
                     gameState = GameState.BetweenLevels;
                 }
@@ -177,91 +181,6 @@ public class IHomeYouGame extends Game {
         };
     }
 
-    private void calculateRoomFulfilment(NeedsFulfillment.Builder fulfilment) {
-        List<Room> rooms = grid.getRoomManager().getRooms();
-        fulfilment.add(NeedsType.Space, (int) ((rooms.size() - 1) * 30 * Customer.NEED_ADJUSTMENT_FACTOR));
-        for (int i = 1; i < rooms.size(); i++) { // skip the first element bc that's the outside
-            final Room r = rooms.get(i);
-            Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);
-            final Map<WallType, Integer> wallCount = new EnumMap<>(WallType.class);
-            for (final WallType w : WallType.values()) {
-                wallCount.put(w, grid.getNumWallTypeInRoom(w, r));
-            }
-            int roomSize = r.getTiles().size();
-            int assetCount = assetsInRoom.size();
-            LOG.debug("Room with {} tiles, {} assets, accessibility {} and walls: {}", roomSize, assetCount, r.isAccessible(), wallCount);
-            if (!r.isAccessible()) {
-                continue; // ignore inaccessible rooms
-            }
-            for (final FurnitureObject furniture : assetsInRoom) {
-                fulfilment.add(furniture.getType().getNeedsFulfillment());
-            }
-            rewardRoomConsistency(fulfilment, assetsInRoom, roomSize, assetCount);
-            int roomComfort = Math.max(0, wallCount.get(WallType.Solid) * WallType.Solid.getPrice() + wallCount.get(WallType.Window) * WallType.Window.getPrice() - roomSize - wallCount.get(WallType.Door) * 4);
-            LOG.debug("Room comfort: {}", roomComfort);
-            fulfilment.add(NeedsType.Comfort, roomComfort);
-        }
-    }
-
-    private void rewardRoomConsistency(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount) {
-        final Map<RoomTypes, Integer> typeCount = new EnumMap<>(RoomTypes.class);
-        RoomTypes bestType = RoomTypes.HALLWAY;
-        int bestCount = 0;
-        for (final RoomTypes roomType : RoomTypes.values()) {
-            int validAssetCount = 0;
-            for (final FurnitureObject asset : assetsInRoom) {
-                if (roomType.validRoomAsset(asset.getType())) {
-                    validAssetCount++;
-                }
-            }
-            typeCount.put(roomType, validAssetCount);
-            if (validAssetCount > bestCount) {
-                bestType = roomType;
-                bestCount = validAssetCount;
-            }
-        }
-
-        boolean roomConsistency = true;
-        for (final RoomTypes roomType : RoomTypes.values()) {
-            if (roomType == bestType) {
-                continue;
-            }
-            if (typeCount.get(roomType) > bestCount) {
-                roomConsistency = false;
-            }
-        }
-        LOG.debug("Room has type {} and is consistent: {}", bestType, roomConsistency);
-        if (roomConsistency) {
-            switch (bestType) {
-                case BATH:
-                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Cleanliness);
-                    break;
-                case OFFICE:
-                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Work);
-                    break;
-                case KITCHEN:
-                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Food);
-                    break;
-                case LIVING_ROOM:
-                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Comfort);
-                    break;
-                case BED_ROOM:
-                    applyRoomPerk(fulfilment, assetsInRoom, roomSize, assetCount, NeedsType.Personal);
-                    break;
-                case HALLWAY:
-                    fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
-                    break;
-                default:
-            }
-        }
-    }
-
-    private void applyRoomPerk(NeedsFulfillment.Builder fulfilment, Collection<FurnitureObject> assetsInRoom, int roomSize, int assetCount, NeedsType needsType) {
-        for (final FurnitureObject assetInRoom : assetsInRoom) {
-            fulfilment.add(needsType, assetInRoom.getType().getNeedsFulfillment().getNeeds().getOrDefault(needsType, 0) * (roomSize - assetCount) / 30);
-        }
-        fulfilment.add(NeedsType.Space, (roomSize - assetCount) * 5);
-    }
 
     private void initNeedLabels() {
         customerNeedLabels = new EnumMap<>(NeedsType.class);
@@ -279,29 +198,29 @@ public class IHomeYouGame extends Game {
         customerNumberOfPpl.setText(String.valueOf(currentCustomer.getNumberOfPpl()));
         Map<NeedsType, Integer> customerDesires = currentCustomer.getDesire().getNeeds();
         for (final NeedsType t : NeedsType.values()) {
-            final Integer desireForType = customerDesires.getOrDefault(t, 0);
+            final Integer desireForType = (int) (customerDesires.getOrDefault(t, 0) / t.getPriceFactor());
             SimpleText needLabel = customerNeedLabels.get(t);
             if (desireForType == 0) {
                 needLabel.setText("None");
                 needLabel.setColor(ColorResource.LIGHT_GRAY);
-            } else if (desireForType < 30 * Customer.NEED_ADJUSTMENT_FACTOR) {
+            } else if (desireForType < (Customer.MAX_DIFFICULTY * 2 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Minimal");
-                needLabel.setColor(new ColorResource(0, 213, 106));
-            } else if (desireForType < 80 * Customer.NEED_ADJUSTMENT_FACTOR) {
+                needLabel.setColor(LIGHT_GREEN);
+            } else if (desireForType < (Customer.MAX_DIFFICULTY * 4 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Low");
                 needLabel.setColor(ColorResource.GREEN);
-            } else if (desireForType < 160 * Customer.NEED_ADJUSTMENT_FACTOR) {
+            } else if (desireForType < (Customer.MAX_DIFFICULTY * 8 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Moderate");
-                needLabel.setColor(new ColorResource(156, 240, 0));
-            } else if (desireForType < 240 * Customer.NEED_ADJUSTMENT_FACTOR) {
+                needLabel.setColor(YELLOW_GREEN);
+            } else if (desireForType < (Customer.MAX_DIFFICULTY * 12 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("Medium");
                 needLabel.setColor(ColorResource.ORANGE);
-            } else if (desireForType < 320 * Customer.NEED_ADJUSTMENT_FACTOR) {
+            } else if (desireForType < (Customer.MAX_DIFFICULTY * 16 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
                 needLabel.setText("High");
                 needLabel.setColor(ColorResource.RED);
             } else {
                 needLabel.setText("Serious");
-                needLabel.setColor(new ColorResource(128, 0, 0));
+                needLabel.setColor(DARK_RED);
             }
         }
     }

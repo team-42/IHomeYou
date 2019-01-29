@@ -1,6 +1,5 @@
 package de.weareprophet.ihomeyou.customer;
 
-import de.weareprophet.ihomeyou.IHomeYouGame;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,9 +7,49 @@ import java.util.*;
 
 public class Customer {
 
+    /**
+     * Factor to adjust the rolled needs.
+     */
     public static final float NEED_ADJUSTMENT_FACTOR = 1.6f;
 
+    /**
+     * Maximum supported difficulty.
+     */
+    public static final int MAX_DIFFICULTY = 400;
+
     private static final Logger LOG = LogManager.getLogger(Customer.class);
+    /**
+     * The difficulty at which mid game needs are unlocked.
+     */
+    private static final int MID_GAME_THRESHOLD = MAX_DIFFICULTY * 7 / 20;
+    /**
+     * The difficulty at which late game needs are unlocked.
+     */
+    private static final int LATE_GAME_THRESHOLD = MAX_DIFFICULTY * 11 / 20;
+    /**
+     * The difficulty at which end game needs are unlocked.
+     */
+    private static final int END_GAME_THRESHOLD = MAX_DIFFICULTY * 15 / 20;
+    /**
+     * The difficulty at which the max number of inhabitants unlocked.
+     */
+    private static final int MAX_INHABITANTS_THRESHOLD = MAX_DIFFICULTY * 17 / 20;
+    /**
+     * The maximum number of inhabitants.
+     */
+    private static final int MAX_INHABITANTS = 6;
+    /**
+     * A factor which makes the game easier.
+     */
+    private static final double REWARD_ADJUSTMENT_FACTOR = 1.8;
+    /**
+     * The maximum satisfaction which can be reached per need.
+     */
+    private static final double MAX_SATISFACTION_PER_NEED = 1.2;
+    /**
+     * The maximum dissatisfaction which can be reached per need.
+     */
+    private static final double MIN_SATISFACTION_PER_NEED = -2.0;
 
     private final NeedsFulfillment desire;
 
@@ -27,49 +66,45 @@ public class Customer {
         this.desire = desire;
     }
 
-    public static Customer easyCustomer() {
-        return new Customer(1, 500, 2, NeedsFulfillment.builder()
-                .add(NeedsType.Storage, 40)
-                .add(NeedsType.Food, 40)
-                .add(NeedsType.Rest, 40)
-                .add(NeedsType.Personal, 20)
-                .add(NeedsType.Space, 20)
-                .build());
-    }
-
+    /**
+     * Creates a new random customer with the specified difficulty.
+     *
+     * @param difficulty A value above 0 and lower or equal to {@value MAX_DIFFICULTY}
+     * @return The created customer
+     */
     public static Customer rngCustomer(final int difficulty) {
         final NeedsFulfillment.Builder needs = NeedsFulfillment.builder();
         final Random r = new Random();
         int overallNeeds = 0;
 
         final Set<NeedsType> possibleNeeds = EnumSet.allOf(NeedsType.class);
-        possibleNeeds.remove(NeedsType.Space);
+        possibleNeeds.remove(NeedsType.Space); // Space need is handled separately
 
-        if (difficulty < 120) {
+        if (difficulty < MID_GAME_THRESHOLD) { // mid-game needs
             possibleNeeds.remove(NeedsType.Comfort);
             possibleNeeds.remove(NeedsType.Food);
         }
-        if (difficulty < 180) {
+        if (difficulty < LATE_GAME_THRESHOLD) { // late-game need
             possibleNeeds.remove(NeedsType.Decoration);
         }
-        if (difficulty < 240) {
+        if (difficulty < END_GAME_THRESHOLD) { // final need
             possibleNeeds.remove(NeedsType.Luxury);
         }
 
         List<NeedsType> actualNeeds = Arrays.asList(possibleNeeds.toArray(new NeedsType[0]));
         Collections.shuffle(actualNeeds);
-        final int numNeeds = Math.min(possibleNeeds.size(), difficulty / 40);
+        final int numNeeds = Math.min(possibleNeeds.size(), difficulty * NeedsType.values().length / MAX_DIFFICULTY);
         for (int i = 0; i < numNeeds; i++) {
             NeedsType needsType = actualNeeds.get(i);
-            int intensity = r.nextInt((int) (difficulty * NEED_ADJUSTMENT_FACTOR));
+            int intensity = r.nextInt((int) (difficulty * NEED_ADJUSTMENT_FACTOR * needsType.getPriceFactor()));
             overallNeeds += intensity;
             needs.add(needsType, intensity);
         }
 
-        int numberOfPpl = Math.max(1, Math.min(6, difficulty / 60));
-        needs.add(NeedsType.Space, numberOfPpl * 30 + r.nextInt(difficulty));
-        int prestige = 1 + (int) (difficulty / (IHomeYouGame.MAX_DIFFICULTY / 3.3));
-        return new Customer(numberOfPpl, (int) (overallNeeds * 1.8 + 100), prestige, needs
+        int numberOfPpl = Math.max(1, Math.min(MAX_INHABITANTS, difficulty * MAX_INHABITANTS / MAX_INHABITANTS_THRESHOLD));
+        needs.add(NeedsType.Space, (int) ((numberOfPpl * 15 + r.nextInt(difficulty)) * NEED_ADJUSTMENT_FACTOR));
+        int prestige = (int) (1 + difficulty * 4.4 / MAX_DIFFICULTY);
+        return new Customer(numberOfPpl, (int) (overallNeeds * REWARD_ADJUSTMENT_FACTOR + 100), prestige, needs
                 .build());
     }
 
@@ -103,9 +138,9 @@ public class Customer {
             final double satisfactionForType;
             final double fulfilmentForType = fulfillment.getNeeds().getOrDefault(t, 0).doubleValue();
             if (customerDesireForType > 0) {
-                satisfactionForType = Math.min(1.2, (fulfilmentForType * 3.0 / customerDesireForType.doubleValue()) - 2.0);
+                satisfactionForType = Math.min(MAX_SATISFACTION_PER_NEED, (fulfilmentForType * ((-MIN_SATISFACTION_PER_NEED) + 1) / customerDesireForType.doubleValue()) + MIN_SATISFACTION_PER_NEED);
             } else {
-                satisfactionForType = 1.0 + Math.min(0.2, fulfilmentForType / 1000.0);
+                satisfactionForType = 1.0 + Math.min(MAX_SATISFACTION_PER_NEED - 1, fulfilmentForType / 1000.0);
             }
             LOG.debug("Need for type {} is {}. Delivered have been {}. Resulting score is {}.", t, customerDesireForType, fulfilmentForType, satisfactionForType);
             satisfaction += satisfactionForType / NeedsType.values().length;

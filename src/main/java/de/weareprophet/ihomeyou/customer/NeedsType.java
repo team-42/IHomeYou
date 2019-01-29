@@ -10,9 +10,23 @@ public enum NeedsType {
     Food,
     Comfort,
     Decoration,
-    Luxury;
+    Luxury(2.0f);
+
+    private float priceFactor;
+
+    NeedsType() {
+        priceFactor = 1.0f;
+    }
+
+    NeedsType(final float priceFactor) {
+        this.priceFactor = priceFactor;
+    }
 
     public String getLabel() {
         return name();
+    }
+
+    public float getPriceFactor() {
+        return priceFactor;
     }
 }
