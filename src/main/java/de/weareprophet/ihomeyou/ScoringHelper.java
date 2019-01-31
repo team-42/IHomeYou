@@ -1,7 +1,7 @@
 package de.weareprophet.ihomeyou;
 
 import de.weareprophet.ihomeyou.asset.WallType;
-import de.weareprophet.ihomeyou.customer.Customer;
+import de.weareprophet.ihomeyou.customer.DifficultyModel;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import de.weareprophet.ihomeyou.customer.NeedsType;
 import de.weareprophet.ihomeyou.datastructure.FurnitureObject;
@@ -20,13 +20,16 @@ class ScoringHelper {
 
     private final GameGrid grid;
 
-    ScoringHelper(GameGrid grid) {
+    private final DifficultyModel difficultyModel;
+
+    ScoringHelper(GameGrid grid, DifficultyModel difficultyModel) {
         this.grid = grid;
+        this.difficultyModel = difficultyModel;
     }
 
     void calculateRoomFulfilment(NeedsFulfillment.Builder fulfilment) {
         List<Room> rooms = grid.getRoomManager().getRooms();
-        fulfilment.add(NeedsType.Space, (int) (Math.max(0, (rooms.size() - 1)) * 20 * Customer.NEED_ADJUSTMENT_FACTOR));
+        fulfilment.add(NeedsType.Space, (int) (Math.max(0, (rooms.size() - 1)) * 20 * difficultyModel.getNeedAdjustmentFactor()));
         for (int i = 1; i < rooms.size(); i++) { // skip the first element bc that's the outside
             final Room r = rooms.get(i);
             Collection<FurnitureObject> assetsInRoom = grid.getAssetsInRoom(r);

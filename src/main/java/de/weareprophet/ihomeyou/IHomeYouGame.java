@@ -5,6 +5,7 @@ import de.weareprophet.ihomeyou.asset.AssetType;
 import de.weareprophet.ihomeyou.asset.WallSelector;
 import de.weareprophet.ihomeyou.asset.WallType;
 import de.weareprophet.ihomeyou.customer.Customer;
+import de.weareprophet.ihomeyou.customer.DifficultyModel;
 import de.weareprophet.ihomeyou.customer.NeedsFulfillment;
 import de.weareprophet.ihomeyou.customer.NeedsType;
 import org.apache.logging.log4j.LogManager;
@@ -32,10 +33,6 @@ public class IHomeYouGame extends Game {
     private static final Logger LOG = LogManager.getLogger(IHomeYouGame.class);
     private static final ScheduledExecutorService ES = Executors.newScheduledThreadPool(2);
     private static final ColorResource YELLOW_GREEN = new ColorResource(156, 240, 0);
-    private static final ColorResource DARK_RED = new ColorResource(128, 0, 0);
-    private static final ColorResource LIGHT_GREEN = new ColorResource(0, 213, 106);
-    private static final int INITIAL_DIFFICULTY = Customer.MAX_DIFFICULTY / 6;
-    private static final int DIFFICULTY_INCREASE_PER_LEVEL = Customer.MAX_DIFFICULTY / 10;
     private WallSelector wallSelector;
 
     private enum GameState {
@@ -45,10 +42,10 @@ public class IHomeYouGame extends Game {
         Victory;
     }
 
+    private DifficultyModel difficultyModel;
     private GameGrid grid;
     private Player player;
     private AssetSelector assetSelector;
-    private int difficulty;
     private Customer currentCustomer;
     private SimpleText customerNumberOfPpl;
     private Map<NeedsType, SimpleText> customerNeedLabels;
@@ -70,8 +67,8 @@ public class IHomeYouGame extends Game {
         setLocation(0, 0);
         setTitle("I Home You!");
         grid = new GameGrid(this);
+        difficultyModel = new DifficultyModel(430, 70, 10, 1.6f, 1.8f, 6, 80, 30, 50, 70);
         player = new Player(this);
-        difficulty = INITIAL_DIFFICULTY;
         gameState = GameState.InLevel;
         initNeedLabels();
         assetSelector = new AssetSelector(this);
@@ -122,7 +119,7 @@ public class IHomeYouGame extends Game {
     }
 
     private void nextCustomer(final double satisfactionLevel) {
-        currentCustomer = Customer.rngCustomer(difficulty);
+        currentCustomer = difficultyModel.nextCustomer();
         player.addBudget((int) Math.round(currentCustomer.getBudget() * satisfactionLevel));
     }
 
@@ -132,19 +129,12 @@ public class IHomeYouGame extends Game {
             if (gameState == GameState.InLevel) {
                 grid.calculateRoomAccessibility();
                 final NeedsFulfillment.Builder fulfilment = NeedsFulfillment.builder();
-                new ScoringHelper(grid).calculateRoomFulfilment(fulfilment);
+                new ScoringHelper(grid, difficultyModel).calculateRoomFulfilment(fulfilment);
                 double satisfaction = currentCustomer.measureSatisfaction(fulfilment.build());
                 LOG.info("Customer satisfaction: {}", satisfaction);
                 satisfactionOutput.setText(NumberFormat.getPercentInstance(Locale.ENGLISH).format(satisfaction));
                 addObject(nextLevelOutput);
                 final ColorResource color;
-                if (difficulty == Customer.MAX_DIFFICULTY) {
-                    gameState = GameState.Victory;
-                    nextLevelOutput.setColor(ColorResource.GREEN);
-                    player.kill();
-                    Arrays.stream(getKeyListeners()).forEach(this::removeKeyListener);
-                    nextLevelOutput.setText("You have won the game!");
-                }
                 if (satisfaction < 0.2) {
                     color = ColorResource.RED;
                     gameState = GameState.GameOver;
@@ -161,12 +151,19 @@ public class IHomeYouGame extends Game {
                 }
                 satisfactionOutput.setColor(color);
                 if (gameState != GameState.GameOver) {
-                    prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
-                    addObject(prestigeOutput);
-                    player.addSkillPoints(currentCustomer.getPrestige());
-                    difficulty = Math.min(Customer.MAX_DIFFICULTY, difficulty + DIFFICULTY_INCREASE_PER_LEVEL);
                     nextCustomer(satisfaction);
-                    gameState = GameState.BetweenLevels;
+                    if (currentCustomer == null) {
+                        gameState = GameState.Victory;
+                        nextLevelOutput.setColor(ColorResource.GREEN);
+                        player.kill();
+                        Arrays.stream(getKeyListeners()).forEach(this::removeKeyListener);
+                        nextLevelOutput.setText("You have won the game!");
+                    } else {
+                        prestigeOutput.setText("+" + currentCustomer.getPrestige() + " skill points");
+                        addObject(prestigeOutput);
+                        player.addSkillPoints(currentCustomer.getPrestige());
+                        gameState = GameState.BetweenLevels;
+                    }
                 }
             } else if (gameState == GameState.BetweenLevels) {
                 satisfactionOutput.setColor(ColorResource.LIGHT_GRAY);
@@ -198,30 +195,11 @@ public class IHomeYouGame extends Game {
         customerNumberOfPpl.setText(String.valueOf(currentCustomer.getNumberOfPpl()));
         Map<NeedsType, Integer> customerDesires = currentCustomer.getDesire().getNeeds();
         for (final NeedsType t : NeedsType.values()) {
-            final Integer desireForType = (int) (customerDesires.getOrDefault(t, 0) / t.getPriceFactor());
+            final Integer desireForType = customerDesires.getOrDefault(t, 0);
             SimpleText needLabel = customerNeedLabels.get(t);
-            if (desireForType == 0) {
-                needLabel.setText("None");
-                needLabel.setColor(ColorResource.LIGHT_GRAY);
-            } else if (desireForType < (Customer.MAX_DIFFICULTY * 2 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
-                needLabel.setText("Minimal");
-                needLabel.setColor(LIGHT_GREEN);
-            } else if (desireForType < (Customer.MAX_DIFFICULTY * 4 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
-                needLabel.setText("Low");
-                needLabel.setColor(ColorResource.GREEN);
-            } else if (desireForType < (Customer.MAX_DIFFICULTY * 8 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
-                needLabel.setText("Moderate");
-                needLabel.setColor(YELLOW_GREEN);
-            } else if (desireForType < (Customer.MAX_DIFFICULTY * 12 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
-                needLabel.setText("Medium");
-                needLabel.setColor(ColorResource.ORANGE);
-            } else if (desireForType < (Customer.MAX_DIFFICULTY * 16 / 20) * Customer.NEED_ADJUSTMENT_FACTOR) {
-                needLabel.setText("High");
-                needLabel.setColor(ColorResource.RED);
-            } else {
-                needLabel.setText("Serious");
-                needLabel.setColor(DARK_RED);
-            }
+            final DifficultyModel.NeedIntensityLabel needIntensity = DifficultyModel.NeedIntensityLabel.getForNeedIntensity(difficultyModel, t, desireForType);
+            needLabel.setText(needIntensity.getName());
+            needLabel.setColor(needIntensity.getColor());
         }
     }
 
